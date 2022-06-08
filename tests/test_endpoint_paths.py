@@ -12,4 +12,8 @@ class TestEndPointPath(TestCase):
 
     def test_not_starting_with_slash_raises(self):
         with self.assertRaises(PathCreationError):
-            EndPointPath(relative='no_slash')
+            EndPointPath(relative='no_slash_at_start')
+
+    def test_ends_with_slash_raises(self):
+        with self.assertRaises(PathCreationError):
+            EndPointPath(relative='/slash_at_end/')
