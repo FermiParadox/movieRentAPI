@@ -24,6 +24,8 @@ class EndPointPath:
             raise PathCreationError("Relative path must start with a slash / .")
 
     def raise_if_slash_at_end(self):
+        """ '...the prefix must not include a final /'
+        See https://fastapi.tiangolo.com/tutorial/bigger-applications/#another-module-with-apirouter"""
         if self.relative.endswith('/'):
             raise PathCreationError("Relative path must not end with a slash / .")
 
