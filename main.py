@@ -1,10 +1,8 @@
 from fastapi import FastAPI
 
-from endpoint_paths import ALL_MOVIES
+from routers import get_all_movies
+
 
 app = FastAPI()
 
-
-@app.get(ALL_MOVIES.relative)
-async def all_movies():
-    return {"message": "all_movies not implemented"}
+app.include_router(get_all_movies.router)
