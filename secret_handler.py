@@ -25,6 +25,6 @@ def _create_mongodb_link(password_: str) -> str:
     return f'mongodb+srv://user0:{password_}@cluster0.wa4gd.mongodb.net/?retryWrites=true&w=majority'
 
 
-def mongo_db_link():
+def mongo_db_link() -> str:
     mongodb_user0_pass = password(PASS_ENV_VAR)
     return _create_mongodb_link(password_=mongodb_user0_pass)
