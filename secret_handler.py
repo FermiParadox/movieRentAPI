@@ -1,9 +1,10 @@
 import os
 
+
 PASS_ENV_VAR = 'MONGODB_MOVIES_USER0_PASS'
 
 
-def password(env_var) -> str:
+def password(env_var: str) -> str:
     val = os.environ.get(env_var)
     if not val:
         raise ValueError("You haven't set the password environment variable.")
