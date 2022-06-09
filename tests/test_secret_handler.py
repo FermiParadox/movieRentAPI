@@ -8,9 +8,10 @@ See https://stackoverflow.com/a/42708480.
 
 
 class TestPasswordExtraction(TestCase):
-    def test_password_raises_when_empty(self):
-        with self.assertRaises(ValueError):
-            password(env_var='non_existent_key_40896903')
+    def test_password_non_empty(self):
+        print('Ignore this warning:')
+        p = password(env_var='non_existent_key_40896903')
+        self.assertTrue(p)
 
     def test_password_doesnt_raise(self):
         p = password(PASS_ENV_VAR)
