@@ -1,9 +1,6 @@
-from fastapi import APIRouter
-
 from db.crud import get_all_movies
 from endpoint_paths import ALL_MOVIES
-
-router = APIRouter()
+from routers._base import router
 
 
 @router.get(path=ALL_MOVIES.relative)
