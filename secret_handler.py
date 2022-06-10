@@ -7,7 +7,7 @@ def fallback_db_password():
     from config import MONGO_DB_PASSWORD
     print("\nLoading secrets from config, instead of env-variables.\n"
           "Make sure you've edit it. If already done, ignore this message.")
-    print(f'WARNING location: {__file__}')
+    print(f'WARNING location: {__file__}\n')
     return MONGO_DB_PASSWORD
 
 
