@@ -24,4 +24,3 @@ class Movie(Document):
     id_ = IntField(min_value=1, unique=True, required=True)
     title = StringField(max_length=50, required=True)
     categories = ListField(validation=validate_movie_categories, required=True)
-

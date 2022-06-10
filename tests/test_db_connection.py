@@ -1,10 +1,10 @@
 from unittest import TestCase
 from pymongo.mongo_client import MongoClient
 
-from data.database import client
+from data.database import client, DBName
 
 
 class Test(TestCase):
     def test_client(self):
-        cl = client()
+        cl = client(db=DBName.test)
         self.assertIsInstance(cl, MongoClient)
