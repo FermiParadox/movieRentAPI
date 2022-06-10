@@ -9,7 +9,7 @@ See https://stackoverflow.com/a/42708480.
 
 class TestPasswordExtraction(TestCase):
     def test_password_non_empty(self):
-        print('Ignore this warning:')
+        print('Ignore this warning during unit-testing:')
         p = password(env_var='non_existent_key_40896903')
         self.assertTrue(p)
 

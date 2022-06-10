@@ -5,10 +5,9 @@ PASS_ENV_VAR = 'MONGODB_MOVIES_USER0_PASS'
 
 def fallback_db_password():
     from config import MONGO_DB_PASSWORD
-
-    print("""============================
-        Loading secrets from config, instead of env-variables. 
-        Make sure you've edit it. If already done, ignore this message.""")
+    print("\nLoading secrets from config, instead of env-variables.\n"
+          "Make sure you've edit it. If already done, ignore this message.")
+    print(f'WARNING location: {__file__}')
     return MONGO_DB_PASSWORD
 
 
