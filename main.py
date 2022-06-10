@@ -1,5 +1,5 @@
-import uvicorn
 from fastapi import FastAPI
+import uvicorn
 
 from routers import get_all_movies
 from routers import post_movies_cat_x

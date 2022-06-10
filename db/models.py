@@ -15,7 +15,7 @@ class User(Document):
 
 # ---------------------------------------------------------------------------
 def validate_movie_categories(categories: List) -> None:
-    disallowed_categories = set(categories) - MOVIE_CATEGORIES
+    disallowed_categories = set(categories) - set(MOVIE_CATEGORIES)
     if disallowed_categories:
         raise ValidationError(f'The following categories are not allowed: {disallowed_categories}')
 

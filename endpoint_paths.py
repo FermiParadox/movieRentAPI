@@ -31,3 +31,4 @@ class EndPointPath:
 
 
 ALL_MOVIES = EndPointPath(relative='/all_movies')
+MOVIES_BY_CAT = EndPointPath(relative='/movies_by_cat')
