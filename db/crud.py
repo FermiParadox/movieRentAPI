@@ -1,5 +1,2 @@
-from typing import List
-
-
-async def get_all_movies() -> List:
+def get_all_movies():
     return []
