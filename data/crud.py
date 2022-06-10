@@ -1,4 +1,4 @@
-from db.schema import MovieCategories, MovieIDList
+from data.schema import MovieCategories, MovieIDList
 
 
 def get_all_movies() -> MovieIDList:

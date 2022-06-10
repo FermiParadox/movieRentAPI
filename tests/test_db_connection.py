@@ -1,7 +1,7 @@
 from unittest import TestCase
 from pymongo.mongo_client import MongoClient
 
-from db.database import client
+from data.database import client
 
 
 class Test(TestCase):

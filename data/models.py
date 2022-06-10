@@ -1,7 +1,7 @@
 from typing import List
 from mongoengine import Document, StringField, IntField, DictField, ListField, ValidationError
 
-from db._base import MOVIE_CATEGORIES
+from data._base import MOVIE_CATEGORIES
 
 
 class User(Document):

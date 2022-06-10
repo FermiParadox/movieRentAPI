@@ -1,5 +1,5 @@
-from db.crud import post_movies_of_categories_x
-from db.schema import MovieCategories
+from data.crud import post_movies_of_categories_x
+from data.schema import MovieCategories
 from routers._base import router
 import endpoint_paths
 

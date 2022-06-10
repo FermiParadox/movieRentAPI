@@ -1,4 +1,4 @@
-from db.crud import get_all_movies
+from data.crud import get_all_movies
 from routers._base import router
 import endpoint_paths
 

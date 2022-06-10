@@ -2,7 +2,7 @@ from pydantic import BaseModel
 from pydantic.schema import List, Literal, Tuple
 from pydantic.types import conint
 
-from db._base import MOVIE_CATEGORIES
+from data._base import MOVIE_CATEGORIES
 
 _MONGODB_INT_UPPER_LIM = 2 ** 31
 ConstrainedIntMongo = conint(gt=0, lt=_MONGODB_INT_UPPER_LIM)
