@@ -7,7 +7,7 @@ from db._base import MOVIE_CATEGORIES
 class User(Document):
     id_ = IntField(min_value=1, unique=True, required=True)
     name = StringField(max_length=50, required=True)
-    # DO NOT store passwords; it's not safe.
+    # DO NOT use this in production. Follow best practises when handling passwords.
     passphrase_hash = StringField(min_length=12, max_length=70)
     balance = IntField(min_value=0, max_value=1000, default=0)
     rented_movies = DictField()
@@ -15,7 +15,7 @@ class User(Document):
 
 # ---------------------------------------------------------------------------
 def validate_movie_categories(categories: List) -> None:
-    disallowed_categories = set(categories) - MOVIE_CATEGORIES
+    disallowed_categories = set(categories) - set(MOVIE_CATEGORIES)
     if disallowed_categories:
         raise ValidationError(f'The following categories are not allowed: {disallowed_categories}')
 
