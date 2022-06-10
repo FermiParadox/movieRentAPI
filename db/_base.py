@@ -8,4 +8,4 @@ class Category(str, Enum):
     action = 'action'
 
 
-ALL_CATEGORIES = {i for i in Category.__members__}
+MOVIE_CATEGORIES = {i for i in Category.__members__}

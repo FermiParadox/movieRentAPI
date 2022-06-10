@@ -2,9 +2,11 @@ import uvicorn
 from fastapi import FastAPI
 
 from routers import get_all_movies
+from routers import post_movies_cat_x
 
 app = FastAPI()
 app.include_router(get_all_movies.router)
+app.include_router(post_movies_cat_x.router)
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)

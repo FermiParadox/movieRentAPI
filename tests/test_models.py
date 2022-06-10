@@ -2,9 +2,9 @@ from unittest import TestCase
 
 from mongoengine import ValidationError
 
-from db.models import Movie, ALL_CATEGORIES
+from db.models import Movie, MOVIE_CATEGORIES
 
-ALL_CATEGORIES_AS_LIST = list(ALL_CATEGORIES)
+ALL_CATEGORIES_AS_LIST = list(MOVIE_CATEGORIES)
 
 
 class TestMovie(TestCase):
