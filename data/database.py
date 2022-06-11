@@ -13,3 +13,7 @@ class DBName(str, Enum):
 def connect(db: DBName) -> MongoClient:
     # https://docs.mongoengine.org/guide/connecting.html#connect-with-keyword-attributes
     return mongoengine.connect(host=mongo_db_link(), db=db)
+
+
+def connect_to_production_db() -> MongoClient:
+    return connect(db=DBName.production)
