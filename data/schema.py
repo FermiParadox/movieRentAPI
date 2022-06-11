@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from pydantic.schema import List, Literal, Tuple
+from pydantic.schema import List, Literal
 from pydantic.types import conint
 
 from data._base import MOVIE_CATEGORIES
