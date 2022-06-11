@@ -4,12 +4,13 @@ from mongoengine import disconnect
 from pymongo.mongo_client import MongoClient
 
 from data.database import connect, DBName, connect_to_production_db
+from secret_handler import MongoDBLink
 
 
 class Test(TestCase):
     def test_connect(self):
         disconnect()
-        cl = connect(db=DBName.test)
+        cl = connect(db=DBName.test, link=MongoDBLink().link())
         self.assertIsInstance(cl, MongoClient)
         disconnect()
 

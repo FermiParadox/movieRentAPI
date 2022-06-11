@@ -2,7 +2,7 @@ from enum import Enum
 import mongoengine
 from pymongo.mongo_client import MongoClient
 
-from secret_handler import mongo_db_link
+from secret_handler import MongoDBLink
 
 
 class DBName(str, Enum):
@@ -10,10 +10,10 @@ class DBName(str, Enum):
     test = 'test'
 
 
-def connect(db: DBName) -> MongoClient:
+def connect(db: DBName, link: str) -> MongoClient:
     # https://docs.mongoengine.org/guide/connecting.html#connect-with-keyword-attributes
-    return mongoengine.connect(host=mongo_db_link(), db=db)
+    return mongoengine.connect(host=link, db=db)
 
 
 def connect_to_production_db() -> MongoClient:
-    return connect(db=DBName.production)
+    return connect(db=DBName.production, link=MongoDBLink().link())
