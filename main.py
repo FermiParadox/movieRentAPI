@@ -1,7 +1,10 @@
 from fastapi import FastAPI
 
+from data.database import connect_to_production_db
 from routers import get_all_movies
 from routers import post_movies_cat_x
+
+connect_to_production_db()
 
 app = FastAPI()
 app.include_router(get_all_movies.router)
