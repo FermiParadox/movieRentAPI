@@ -10,6 +10,6 @@ class DBName(str, Enum):
     test = 'test'
 
 
-def client(db: DBName) -> MongoClient:
+def connection(db: DBName) -> MongoClient:
     # https://docs.mongoengine.org/guide/connecting.html#connect-with-keyword-attributes
     return connect(host=mongo_db_link(), db=db)
