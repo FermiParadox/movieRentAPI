@@ -7,7 +7,7 @@ from data.database import connect, DBName
 
 
 class Test(TestCase):
-    def test_client(self):
+    def test_connect(self):
         cl = connect(db=DBName.test)
         self.assertIsInstance(cl, MongoClient)
         disconnect()
