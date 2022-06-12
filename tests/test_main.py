@@ -54,6 +54,7 @@ class TestMovieByID(TestCase):
         # FastAPI's POST testing might be bugged, hence the dirty testing below.
         # (When calling TestClient with `params` it ignores them)
         self.url = MOVIE_BY_ID.stripped_relative()
+        self.url_for_movie_2 = self.url + '2'
 
     def test_wrong_id_responds_422(self):
         response = TestClient(app=app).post(url=self.url + '65234234')
@@ -61,17 +62,17 @@ class TestMovieByID(TestCase):
         self.assertEqual(422, code, msg=f'Response code: {code}')
 
     def test_ok_response(self):
-        response = TestClient(app=app).post(self.url + '1')
+        response = TestClient(app=app).post(self.url_for_movie_2)
         code = response.status_code
         self.assertTrue(response.ok, msg=f'Response code: {code}')
 
     def test_details_id_title(self):
-        response = TestClient(app=app).post(self.url + '1')
+        response = TestClient(app=app).post(self.url_for_movie_2)
         self.assertIn('title', response.json())
         self.assertIn('id_', response.json())
         self.assertIn('categories', response.json())
         self.assertIn('details', response.json())
 
     def test_categories_not_empty(self):
-        response = TestClient(app=app).post(self.url + '1')
+        response = TestClient(app=app).post(self.url_for_movie_2)
         self.assertTrue(response.json()['categories'])
