@@ -10,11 +10,11 @@ class PathCreationError(Exception):
 
 
 @dataclass(frozen=True)
-class EndPointPath:
-    relative: str
+class EndpointPath:
+    fastapi_format: str
 
     def stripped_relative(self):
-        return sub(r'\{.+\}', '', self.relative)
+        return sub(r'\{.+\}', '', self.fastapi_format)
 
     @property
     def full(self):
@@ -25,16 +25,17 @@ class EndPointPath:
         self.raise_if_slash_at_end()
 
     def raise_if_no_slash_at_start(self):
-        if not self.relative.startswith('/'):
+        if not self.fastapi_format.startswith('/'):
             raise PathCreationError("Relative path must start with a slash / .")
 
     def raise_if_slash_at_end(self):
         """ '...the prefix must not include a final /'
         See https://fastapi.tiangolo.com/tutorial/bigger-applications/#another-module-with-apirouter"""
-        if self.relative.endswith('/'):
+        if self.fastapi_format.endswith('/'):
             raise PathCreationError("Relative path must not end with a slash / .")
 
 
-ALL_MOVIES = EndPointPath(relative='/all_movies')
-MOVIES_BY_CAT = EndPointPath(relative='/movies_by_cat')
-MOVIE_BY_ID = EndPointPath(relative='/movie_details/{movie_id}')
+ALL_MOVIES = EndpointPath(fastapi_format='/all_movies')
+MOVIES_BY_CAT = EndpointPath(fastapi_format='/movies_by_cat')
+MOVIE_BY_ID = EndpointPath(fastapi_format='/movie_details/{movie_id}')
+RENT = EndpointPath(fastapi_format='/rent/{movie_id}')

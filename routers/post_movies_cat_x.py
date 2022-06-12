@@ -4,6 +4,6 @@ from routers._base import router
 from routers import _endpoint_paths
 
 
-@router.post(path=_endpoint_paths.MOVIES_BY_CAT.relative)
+@router.post(path=_endpoint_paths.MOVIES_BY_CAT.fastapi_format)
 async def movies_of_categories_x(categories: MovieCategories):
     return post_movies_of_categories_x(categories)
