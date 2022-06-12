@@ -3,6 +3,10 @@ from fastapi.testclient import TestClient
 
 from main import app
 
+print(f"Tests in {__name__} don't fail when run individually."
+      f"They do fail when running all tests in /tests."
+      f"There's probably some bug.")
+
 
 class TestAllMovies(TestCase):
     def setUp(self) -> None:
@@ -42,3 +46,9 @@ class TestMoviesByCategory(TestCase):
                                             json={'categories': ['kdf9356a', 'action']})
         code = response.status_code
         self.assertEqual(422, code, msg=f'Response code: {code}')
+
+
+class TestMovieByTitle(TestCase):
+    def setUp(self) -> None:
+        from routers._endpoint_paths import MOVIE_BY_TITLE
+        self.url = MOVIE_BY_TITLE.full
