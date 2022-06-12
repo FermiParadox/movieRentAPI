@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from endpoint_paths import EndPointPath, HOME, PathCreationError
+from routers._endpoint_paths import EndPointPath, HOME, PathCreationError
 
 
 class TestEndPointPath(TestCase):

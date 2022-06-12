@@ -6,7 +6,7 @@ from main import app
 
 class TestAllMovies(TestCase):
     def setUp(self) -> None:
-        from endpoint_paths import ALL_MOVIES
+        from routers._endpoint_paths import ALL_MOVIES
         self.url = ALL_MOVIES.full
 
     def test_ok_response(self):
@@ -22,7 +22,7 @@ class TestAllMovies(TestCase):
 
 class TestMoviesByCategory(TestCase):
     def setUp(self) -> None:
-        from endpoint_paths import MOVIES_BY_CAT
+        from routers._endpoint_paths import MOVIES_BY_CAT
         self.url = MOVIES_BY_CAT.full
 
     def test_response_contains_list(self):
