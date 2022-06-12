@@ -51,17 +51,17 @@ class TestMoviesByCategory(TestCase):
 class TestMovieByID(TestCase):
     def setUp(self) -> None:
         from routers._endpoint_paths import MOVIE_BY_ID
-        self.url = MOVIE_BY_ID.full
+        # FastAPI's POST testing might be bugged, hence the dirty testing below.
+        # (When calling TestClient with `params` it ignores them)
+        self.url = MOVIE_BY_ID.stripped_relative()
 
-    def test_wrong_id_responds_404(self):
-        response = TestClient(app=app).post(url=self.url,
-                                            json={'movie_id': 461456846375906})
+    def test_wrong_id_responds_422(self):
+        response = TestClient(app=app).post(url=self.url + '65234234')
         code = response.status_code
-        self.assertEqual(404, code, msg=f'Response code: {code}')
+        self.assertEqual(422, code, msg=f'Response code: {code}')
 
     def test_ok_response(self):
-        response = TestClient(app=app).post(url=self.url,
-                                            json={'movie_id': 1})
+        response = TestClient(app=app).post(self.url + '1')
         code = response.status_code
         self.assertTrue(response.ok, msg=f'Response code: {code}')
 
