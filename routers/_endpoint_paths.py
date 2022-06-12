@@ -1,4 +1,6 @@
 from dataclasses import dataclass
+from re import sub
+
 
 HOME = 'http://127.0.0.1:8000'
 
@@ -11,9 +13,12 @@ class PathCreationError(Exception):
 class EndPointPath:
     relative: str
 
+    def stripped_relative(self):
+        return sub(r'\{.+\}', '', self.relative)
+
     @property
     def full(self):
-        return HOME + self.relative
+        return HOME + self.stripped_relative()
 
     def __post_init__(self):
         self.raise_if_no_slash_at_start()

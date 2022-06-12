@@ -46,3 +46,22 @@ class TestMoviesByCategory(TestCase):
                                             json={'categories': ['kdf9356a', 'action']})
         code = response.status_code
         self.assertEqual(422, code, msg=f'Response code: {code}')
+
+
+class TestMovieByID(TestCase):
+    def setUp(self) -> None:
+        from routers._endpoint_paths import MOVIE_BY_ID
+        self.url = MOVIE_BY_ID.full
+
+    def test_wrong_id_responds_404(self):
+        response = TestClient(app=app).post(url=self.url,
+                                            json={'movie_id': 461456846375906})
+        code = response.status_code
+        self.assertEqual(404, code, msg=f'Response code: {code}')
+
+    def test_ok_response(self):
+        response = TestClient(app=app).post(url=self.url,
+                                            json={'movie_id': 1})
+        code = response.status_code
+        self.assertTrue(response.ok, msg=f'Response code: {code}')
+
