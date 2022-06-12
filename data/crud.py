@@ -10,4 +10,4 @@ def get_all_movies() -> MovieIDList:
 
 
 def post_movies_of_categories_x(categories: MovieCategories) -> MovieIDList:
-    return []
+    return [m.title for m in Movie.objects(categories__in=categories.categories)]
