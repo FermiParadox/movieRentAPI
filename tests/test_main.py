@@ -18,10 +18,10 @@ class TestAllMovies(TestCase):
         code = response.status_code
         self.assertTrue(response.ok, msg=f'Response code: {code}')
 
-    def test_response_contains_list(self):
+    def test_response_contains_dict(self):
         response = TestClient(app=app).get(self.url)
         data = response.json()
-        self.assertIsInstance(data, list)
+        self.assertIsInstance(data, dict)
 
 
 class TestMoviesByCategory(TestCase):
