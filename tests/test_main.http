@@ -1,3 +1,7 @@
+POST http://127.0.0.1:8000/movie_details/1
+Content-Type: application/json
+
+###
 # Test your FastAPI endpoints
 
 GET http://127.0.0.1:8000/all_movies

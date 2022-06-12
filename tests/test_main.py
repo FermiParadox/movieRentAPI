@@ -46,9 +46,3 @@ class TestMoviesByCategory(TestCase):
                                             json={'categories': ['kdf9356a', 'action']})
         code = response.status_code
         self.assertEqual(422, code, msg=f'Response code: {code}')
-
-
-class TestMovieByTitle(TestCase):
-    def setUp(self) -> None:
-        from routers._endpoint_paths import MOVIE_BY_TITLE
-        self.url = MOVIE_BY_TITLE.full
