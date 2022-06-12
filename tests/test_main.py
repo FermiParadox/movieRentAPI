@@ -65,3 +65,13 @@ class TestMovieByID(TestCase):
         code = response.status_code
         self.assertTrue(response.ok, msg=f'Response code: {code}')
 
+    def test_details_id_title(self):
+        response = TestClient(app=app).post(self.url + '1')
+        self.assertIn('title', response.json())
+        self.assertIn('id_', response.json())
+        self.assertIn('categories', response.json())
+        self.assertIn('details', response.json())
+
+    def test_categories_not_empty(self):
+        response = TestClient(app=app).post(self.url + '1')
+        self.assertTrue(response.json()['categories'])
