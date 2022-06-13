@@ -54,30 +54,30 @@ class TestMoviesByCategory(TestCase):
 class TestMovieByID(TestCase):
     def setUp(self) -> None:
         from routers._endpoint_paths import MOVIE_BY_ID
-        # FastAPI's POST testing might be bugged, hence the dirty testing below.
+        # FastAPI's testing might be bugged, hence the dirty testing below.
         # (When calling TestClient with `params` it ignores them)
         self.url = MOVIE_BY_ID.stripped_relative
         self.url_for_movie_2 = self.url + EXISTING_MOVIE_ID
 
     def test_ok_response(self):
-        response = client.post(self.url_for_movie_2)
+        response = client.get(self.url_for_movie_2)
         code = response.status_code
         self.assertTrue(response.ok, msg=f'Response code: {code}')
 
     def test_wrong_id_responds_422(self):
-        response = client.post(url=self.url + '65234234')
+        response = client.get(url=self.url + '65234234')
         code = response.status_code
         self.assertEqual(422, code, msg=f'Response code: {code}')
 
     def test_details_id_title(self):
-        response = client.post(self.url_for_movie_2)
+        response = client.get(self.url_for_movie_2)
         self.assertIn('title', response.json())
         self.assertIn('id_', response.json())
         self.assertIn('categories', response.json())
         self.assertIn('details', response.json())
 
     def test_categories_not_empty(self):
-        response = client.post(self.url_for_movie_2)
+        response = client.get(self.url_for_movie_2)
         self.assertTrue(response.json()['categories'])
 
 
@@ -88,6 +88,6 @@ class TestRentMovie(TestCase):
         self.url_movie2 = self.url + EXISTING_MOVIE_ID
 
     def test_ok_response(self):
-        response = client.post(self.url_movie2, params={'user_id': 1})
+        response = client.get(self.url_movie2, params={'user_id': 1})
         code = response.status_code
         self.assertTrue(response.ok, msg=f'Response code: {code}')
