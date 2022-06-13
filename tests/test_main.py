@@ -8,6 +8,7 @@ print(f"Tests in {__name__} don't fail when run individually.\n"
       f"There's probably some bug.")
 
 client = TestClient(app=app)
+EXISTING_MOVIE_ID = '2'
 
 
 class TestAllMovies(TestCase):
@@ -56,17 +57,17 @@ class TestMovieByID(TestCase):
         # FastAPI's POST testing might be bugged, hence the dirty testing below.
         # (When calling TestClient with `params` it ignores them)
         self.url = MOVIE_BY_ID.stripped_relative
-        self.url_for_movie_2 = self.url + '2'
-
-    def test_wrong_id_responds_422(self):
-        response = client.post(url=self.url + '65234234')
-        code = response.status_code
-        self.assertEqual(422, code, msg=f'Response code: {code}')
+        self.url_for_movie_2 = self.url + EXISTING_MOVIE_ID
 
     def test_ok_response(self):
         response = client.post(self.url_for_movie_2)
         code = response.status_code
         self.assertTrue(response.ok, msg=f'Response code: {code}')
+
+    def test_wrong_id_responds_422(self):
+        response = client.post(url=self.url + '65234234')
+        code = response.status_code
+        self.assertEqual(422, code, msg=f'Response code: {code}')
 
     def test_details_id_title(self):
         response = client.post(self.url_for_movie_2)
@@ -78,3 +79,15 @@ class TestMovieByID(TestCase):
     def test_categories_not_empty(self):
         response = client.post(self.url_for_movie_2)
         self.assertTrue(response.json()['categories'])
+
+
+class TestRentMovie(TestCase):
+    def setUp(self) -> None:
+        from routers._endpoint_paths import RENT
+        self.url = RENT.full
+        self.url_movie2_user1 = self.url + EXISTING_MOVIE_ID
+
+    def test_ok_response(self):
+        response = client.post(self.url_movie2_user1, params={'user_id': 1})
+        code = response.status_code
+        self.assertTrue(response.ok, msg=f'Response code: {code}')

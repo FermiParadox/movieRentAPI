@@ -33,6 +33,5 @@ def raise_http_if_empty(movies_list: MovieIDList):
                             detail=f"This movie ID doesn't exist.")
 
 
-
-async def rent_movie(movie_id: str, user_id: str):
+async def rent_movie(movie_id: int, user_id: str):
     return
