@@ -21,3 +21,7 @@ MovieIDList = List[int]
 
 class MovieCategories(BaseModel):
     categories: List[Literal[MOVIE_CATEGORIES]]
+
+
+class UserID(BaseModel):
+    id_: ConstrainedIntMongo

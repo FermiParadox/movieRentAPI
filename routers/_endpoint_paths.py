@@ -15,7 +15,7 @@ class EndpointPath:
 
     @property
     def stripped_relative(self):
-        return sub(r'\{.+\}', '', self.fastapi_format)
+        return sub(r'\{.+}', '', self.fastapi_format)
 
     @property
     def full(self):
@@ -39,4 +39,5 @@ class EndpointPath:
 ALL_MOVIES = EndpointPath(fastapi_format='/all_movies')
 MOVIES_BY_CAT = EndpointPath(fastapi_format='/movies_by_cat')
 MOVIE_BY_ID = EndpointPath(fastapi_format='/movie_details/{movie_id}')
-RENT = EndpointPath(fastapi_format='/rent/{movie_id}')
+RENT = EndpointPath(fastapi_format='/rent_movie/{movie_id}')
+RETURN = EndpointPath(fastapi_format='/return/{movie_id}')

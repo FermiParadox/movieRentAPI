@@ -43,6 +43,9 @@ class RentedMovieModifier:
         s = self.rent_movie_str(movie_id=movie_id, date=date)
         return user.update(add_to_set__rented_movies=s)
 
+    def return_rented(self, user: User, movie_id):
+        raise NotImplementedError
+
 
 class RentedMovieHandler:
     def rent_movie(self, movie_id: int, user_id: str) -> Response:
@@ -59,8 +62,19 @@ class RentedMovieHandler:
         self.start_charging(user_id=user_id)
         return self.rent_response(modified=modified, movie_id=movie_id)
 
-    def start_charging(self, user_id):
-        print(f'"start_charging" Not implemented ')
+    def return_movie(self, movie_id, user_id):
+        return self._return_movie(movie_id=movie_id, user_id=user_id, modifier=RentedMovieModifier())
+
+    def _return_movie(self, movie_id, user_id, modifier: RentedMovieModifier):
+        u = user_by_id(user_id=user_id)
+        raise_http_if_id_doesnt_exist(match=u)
+
+        m = movie_by_id(movie_id=movie_id)
+        raise_http_if_id_doesnt_exist(match=m)
+
+        modified = modifier.return_rented(user=u, movie_id=movie_id)
+        self.stop_charging(user_id=user_id)
+        return self.return_response(modified=modified, movie_id=movie_id)
 
     @staticmethod
     def rent_response(modified: bool, movie_id: int) -> Response:
@@ -75,6 +89,12 @@ class RentedMovieHandler:
             return Response(status_code=201, content=f'Movie ID {movie_id} return.')
         else:
             return Response(status_code=400, content=f'Returning movie ID {movie_id} failed.')
+
+    def start_charging(self, user_id):
+        print(f'"start_charging" Not implemented ')
+
+    def stop_charging(self, user_id):
+        print('"stop_charging" not implemented')
 
 
 def raise_http_if_id_doesnt_exist(match: Any):
