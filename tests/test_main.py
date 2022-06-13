@@ -88,6 +88,6 @@ class TestRentMovie(TestCase):
         self.url_movie2 = self.url + EXISTING_MOVIE_ID
 
     def test_ok_response(self):
-        response = client.get(self.url_movie2, params={'user_id': 1})
+        response = client.post(self.url_movie2, params={'user_id': 1})
         code = response.status_code
         self.assertTrue(response.ok, msg=f'Response code: {code}')

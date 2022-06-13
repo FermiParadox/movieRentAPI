@@ -8,10 +8,12 @@ _MONGODB_INT_UPPER_LIM = 2 ** 31
 ConstrainedIntMongo = conint(gt=0, lt=_MONGODB_INT_UPPER_LIM)
 
 
+# TODO use in crud
 class Movie(BaseModel):
     id_: ConstrainedIntMongo
     title: str
     categories: List
+    details: str
 
 
 MovieIDList = List[int]

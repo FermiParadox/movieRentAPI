@@ -8,4 +8,4 @@ import data.crud
 @router.post(path=_endpoint_paths.RENT.fastapi_format)
 async def post_rent_movie(movie_id: int, req: Request):
     params = req.query_params
-    return await data.crud.rent_movie(movie_id=movie_id, user_id=params['user_id'])
+    return data.crud.RentedMovieHandler().rent_movie(movie_id=movie_id, user_id=params['user_id'])
