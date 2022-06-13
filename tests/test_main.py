@@ -85,9 +85,9 @@ class TestRentMovie(TestCase):
     def setUp(self) -> None:
         from routers._endpoint_paths import RENT
         self.url = RENT.full
-        self.url_movie2_user1 = self.url + EXISTING_MOVIE_ID
+        self.url_movie2 = self.url + EXISTING_MOVIE_ID
 
     def test_ok_response(self):
-        response = client.post(self.url_movie2_user1, params={'user_id': 1})
+        response = client.post(self.url_movie2, params={'user_id': 1})
         code = response.status_code
         self.assertTrue(response.ok, msg=f'Response code: {code}')
