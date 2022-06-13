@@ -13,12 +13,13 @@ class PathCreationError(Exception):
 class EndpointPath:
     fastapi_format: str
 
+    @property
     def stripped_relative(self):
         return sub(r'\{.+\}', '', self.fastapi_format)
 
     @property
     def full(self):
-        return HOME + self.stripped_relative()
+        return HOME + self.stripped_relative
 
     def __post_init__(self):
         self.raise_if_no_slash_at_start()

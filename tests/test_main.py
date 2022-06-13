@@ -7,7 +7,6 @@ print(f"Tests in {__name__} don't fail when run individually.\n"
       f"They do fail when running all tests in /tests.\n"
       f"There's probably some bug.")
 
-
 client = TestClient(app=app)
 
 
@@ -34,19 +33,19 @@ class TestMoviesByCategory(TestCase):
 
     def test_response_contains_list(self):
         response = client.post(url=self.url,
-                                            json={'categories': ['comedy', 'action']})
+                               json={'categories': ['comedy', 'action']})
         data = response.json()
         self.assertIsInstance(data, list)
 
     def test_no_category_responds_422(self):
         response = client.post(url=self.url,
-                                            json={})
+                               json={})
         code = response.status_code
         self.assertEqual(422, code, msg=f'Response code: {code}')
 
     def test_wrong_category_responds_422(self):
         response = client.post(url=self.url,
-                                            json={'categories': ['kdf9356a', 'action']})
+                               json={'categories': ['kdf9356a', 'action']})
         code = response.status_code
         self.assertEqual(422, code, msg=f'Response code: {code}')
 
@@ -56,7 +55,7 @@ class TestMovieByID(TestCase):
         from routers._endpoint_paths import MOVIE_BY_ID
         # FastAPI's POST testing might be bugged, hence the dirty testing below.
         # (When calling TestClient with `params` it ignores them)
-        self.url = MOVIE_BY_ID.stripped_relative()
+        self.url = MOVIE_BY_ID.stripped_relative
         self.url_for_movie_2 = self.url + '2'
 
     def test_wrong_id_responds_422(self):
