@@ -21,16 +21,16 @@ async def movies_by_category(categories: MovieCategories) -> MovieIDList:
 
 async def movie_by_id(movie_id: int):
     movies_list = Movie.objects(id_=movie_id)
-    raise_http_if_empty(movies_list=movies_list)
+    raise_http_if_id_doesnt_exist(matches=movies_list)
     m: Movie
     m = movies_list[0]
     return {'title': m.title, 'id_': m.id_, 'categories': m.categories, 'details': m.details}
 
 
-def raise_http_if_empty(movies_list: MovieIDList):
-    if not movies_list:
+def raise_http_if_id_doesnt_exist(matches: list):
+    if not matches:
         raise HTTPException(status_code=HTTP_422_UNPROCESSABLE_ENTITY,
-                            detail=f"This movie ID doesn't exist.")
+                            detail=f"This ID doesn't exist.")
 
 
 async def rent_movie(movie_id: int, user_id: str):
