@@ -23,9 +23,12 @@ def movies_by_category(categories: MovieCategories) -> MovieIDList:
     return [m.title for m in movies]
 
 
+def movie_db_obj_by_id(movie_id: int):
+    return Movie.objects(id_=movie_id).first()
+
+
 def movie_by_id(movie_id: int) -> dict:
-    m: Movie
-    m = Movie.objects(id_=movie_id).first()
+    m = movie_db_obj_by_id(movie_id)
     raise_http_if_id_doesnt_exist(match=m)
     return {'title': m.title, 'id_': m.id_, 'categories': m.categories, 'details': m.details}
 
