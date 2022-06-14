@@ -1,4 +1,3 @@
-from datetime import datetime
 from unittest import TestCase
 
 from src.data.crud import RentedMovieHandler, RentedMovieModifier, RentDaysHandler
@@ -19,8 +18,14 @@ class TestRentedMovieHandler(TestCase):
 
 class TestRentedMovieModifier(TestCase):
     def test_rent_movie_str(self):
-        s = RentedMovieModifier().rent_movie_str(movie_id=1, date='2022-06-13')
-        self.assertEqual('1:2022-06-13', s)
+        from src.data.crud import RentedMovieDecoder
+
+        date = '2022-06-13'
+        movie_id = 1
+        expect = f'{movie_id}{RentedMovieDecoder.MOVIE_ID_DATE_SEPARATOR}{date}'
+
+        result = RentedMovieModifier().rent_movie_str(movie_id=1, date=date)
+        self.assertEqual(expect, result)
 
 
 class TestRentDaysHandler(TestCase):
