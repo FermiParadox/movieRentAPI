@@ -133,8 +133,7 @@ class TestGetCharge(TestCase):
 
         self.test_user_id = 1
 
-    def test_fail(self):
-        with self.assertRaises(NotImplementedError):
-            response = client.put(self.cost_url, json={"id_": self.test_user_id})
-            code = response.status_code
-            self.assertTrue(response.ok, msg=f'Response code: {code}')
+    def test_response_is_ok(self):
+        response = client.put(self.cost_url, json={"id_": self.test_user_id})
+        code = response.status_code
+        self.assertTrue(response.ok, msg=f'Response code: {code}')
