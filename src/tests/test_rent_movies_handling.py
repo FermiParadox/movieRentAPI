@@ -28,6 +28,16 @@ class TestRentedMovieModifier(TestCase):
         self.assertEqual(expect, result)
 
 
+class TestRentedMovieDecoder(TestCase):
+    def test_decode_contains_movie_id_and_date(self):
+        from src.data.crud import RentedMovieDecoder
+        movie_id = '1'
+        date = '2031-09-14'
+        obj = RentedMovieDecoder().decode(f'{movie_id}{RentedMovieDecoder.MOVIE_ID_DATE_SEPARATOR}{date}')
+        self.assertEqual(movie_id, obj.movie_id)
+        self.assertEqual(date, obj.start_date)
+
+
 class TestRentDaysHandler(TestCase):
     def test__days_from_today_until_today_is_0(self):
         current_date_str = RentDaysHandler().current_date_str()
@@ -38,4 +48,3 @@ class TestRentDaysHandler(TestCase):
         current_date_str = RentDaysHandler().current_date_str()
         days = RentDaysHandler().charged_days(start_day=current_date_str)
         self.assertEqual(1, days)
-
