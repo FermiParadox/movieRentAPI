@@ -107,3 +107,7 @@ def raise_http_if_id_doesnt_exist(match: Any):
     if not match:
         raise HTTPException(status_code=HTTP_422_UNPROCESSABLE_ENTITY,
                             detail=f"No match found.")
+
+
+def cost_by_rented_id(movie_id, user_id):
+    raise NotImplementedError

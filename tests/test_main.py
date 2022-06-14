@@ -122,3 +122,19 @@ class TestRentMovie(TestCase):
         response = client.put(self.return_url + '8293753', json={"id_": self.test_user_id})
         code = response.status_code
         self.assertEqual(422, code)
+
+
+class TestGetCharge(TestCase):
+    def setUp(self) -> None:
+        from routers._endpoint_paths import RENT_COST_BY_MOVIE_ID
+
+        self.url = RENT_COST_BY_MOVIE_ID.full
+        self.cost_url = self.url + '7'
+
+        self.test_user_id = 1
+
+    def test_fail(self):
+        with self.assertRaises(NotImplementedError):
+            response = client.put(self.cost_url, json={"id_": self.test_user_id})
+            code = response.status_code
+            self.assertTrue(response.ok, msg=f'Response code: {code}')
