@@ -93,7 +93,7 @@ class RentedMovieHandler:
     def return_response(self, modified: bool, user_id: int, movie_id: int) -> Response:
         if modified:
             self.pay_cost(user_id=user_id)
-            return Response(status_code=201, content=f'Movie ID {movie_id} return.')
+            return Response(status_code=201, content=f'Movie ID {movie_id} returned.')
         else:
             return Response(status_code=400, content=f'Returning movie ID {movie_id} failed.')
 
