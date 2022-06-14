@@ -72,7 +72,7 @@ class RentedMovieHandler:
         u = user_by_id(user_id=user_id)
         raise_http_if_id_doesnt_exist(match=u)
 
-        m = movie_by_id(movie_id=movie_id)
+        m = movie_db_obj_by_id(movie_id=movie_id)
         raise_http_if_id_doesnt_exist(match=m)
 
         modified = modifier.delete_rented(user=u, movie_id=movie_id)
