@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
 from functools import lru_cache
@@ -106,10 +107,6 @@ def raise_http_if_id_doesnt_exist(match: Any):
                             detail=f"No match found.")
 
 
-def cost_by_rented_id(movie_id, user_id):
-    raise NotImplementedError
-
-
 class CostPerDay(int, Enum):
     """Cost in cents.
     """
@@ -147,6 +144,26 @@ class RentDaysHandler:
         return date_diff.days
 
     def charged_days(self, start_day: str) -> int:
-        """If the buyer watches the movie and returns it within a few hours
+        """If they watch a movie and return it within a few hours
         they should still be charged."""
         return self._days(start_day) + 1
+
+
+@dataclass
+class MovieIDDatePair:
+    movie_id: str
+    start_date: str
+
+
+class RentedMovieDecoder:
+    def decode(self, movie_id_date_str: str):
+        # TODO extract magic `:`
+        movie_id, date = movie_id_date_str.split(':')
+        return MovieIDDatePair(movie_id=movie_id, start_date=date)
+
+
+class TransactionHandler:
+    def apply_cost(self, user: User, start_day: str) -> None:
+        days = RentDaysHandler().charged_days(start_day=start_day)
+        movie_cost = RentedMovieCost().cost(days_used=days)
+        user.update(dec__balance=movie_cost)
