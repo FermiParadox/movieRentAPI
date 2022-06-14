@@ -8,7 +8,7 @@ from starlette.responses import Response
 from starlette.status import HTTP_422_UNPROCESSABLE_ENTITY
 
 from src.data.models import Movie, User
-from src.data.schema import MovieCategories, MovieIDList
+from src.data.schema import MovieCategories
 
 
 def get_all_movies() -> dict:
@@ -20,9 +20,9 @@ def get_all_movies() -> dict:
     return {m.id_: m.title for m in movies}
 
 
-def movies_by_category(categories: MovieCategories) -> MovieIDList:
+def movies_by_category(categories: MovieCategories) -> dict:
     movies = Movie.objects(categories__in=categories.categories)
-    return [m.title for m in movies]
+    return {m.id_: m.title for m in movies}
 
 
 def movie_db_obj_by_id(movie_id: int) -> Movie:
@@ -31,7 +31,7 @@ def movie_db_obj_by_id(movie_id: int) -> Movie:
 
 def movie_by_id(movie_id: int) -> dict:
     m = movie_db_obj_by_id(movie_id)
-    raise_http_if_id_doesnt_exist(match=m)
+    raise_http_if_x_doesnt_exist(match=m, x=f'Movie ID {movie_id}')
     return {'title': m.title, 'id_': m.id_, 'categories': m.categories, 'details': m.details}
 
 
@@ -62,10 +62,10 @@ class RentedMovieHandler:
 
     def _rent_movie(self, movie_id: int, user_id: str, modifier: RentedMovieModifier):
         u = user_by_id(user_id=user_id)
-        raise_http_if_id_doesnt_exist(match=u)
+        raise_http_if_x_doesnt_exist(match=u, x=f'User ID {user_id}')
 
         m = movie_by_id(movie_id=movie_id)
-        raise_http_if_id_doesnt_exist(match=m)
+        raise_http_if_x_doesnt_exist(match=m, x=f'Movie ID {movie_id}')
 
         modified = modifier.add_rented(user=u, movie_id=movie_id)
         return self.rent_response(modified=modified, movie_id=movie_id)
@@ -75,13 +75,15 @@ class RentedMovieHandler:
 
     def _return_movie(self, movie_id, user_id, modifier: RentedMovieModifier):
         u = user_by_id(user_id=user_id)
-        raise_http_if_id_doesnt_exist(match=u)
+        raise_http_if_x_doesnt_exist(match=u, x=f'User ID {user_id}')
 
         m = movie_db_obj_by_id(movie_id=movie_id)
-        raise_http_if_id_doesnt_exist(match=m)
+        raise_http_if_x_doesnt_exist(match=m, x=f'Movie ID {movie_id}')
 
+        cost = RentedMovieCost().cost_of_movie(movie_id=movie_id, user_id=user_id)
+        TransactionHandler().apply_cost(user=u, movie_cost=cost)
         modified = modifier.delete_rented(user=u, movie_id=movie_id)
-        return self.return_response(modified=modified, user_id=user_id, movie_id=movie_id)
+        return self.return_response(modified=modified, movie_id=movie_id)
 
     @staticmethod
     def rent_response(modified: bool, movie_id: int) -> Response:
@@ -90,25 +92,21 @@ class RentedMovieHandler:
         else:
             return Response(status_code=400, content=f'Renting movie ID {movie_id} failed.')
 
-    def return_response(self, modified: bool, user_id: int, movie_id: int) -> Response:
+    def return_response(self, modified: bool, movie_id: int) -> Response:
         if modified:
-            self.pay_cost(user_id=user_id)
             return Response(status_code=201, content=f'Movie ID {movie_id} returned.')
         else:
             return Response(status_code=400, content=f'Returning movie ID {movie_id} failed.')
 
-    def pay_cost(self, user_id):
-        print('pay_cost not implemented')
+
+def http_422_no_match_exception(msg="No match found."):
+    return HTTPException(status_code=HTTP_422_UNPROCESSABLE_ENTITY,
+                         detail=msg)
 
 
-HTTP422NoMatchException = HTTPException(status_code=HTTP_422_UNPROCESSABLE_ENTITY,
-                                        detail=f"No match found.")
-
-
-def raise_http_if_id_doesnt_exist(match: Any):
+def raise_http_if_x_doesnt_exist(match: Any, x):
     if not match:
-        raise HTTPException(status_code=HTTP_422_UNPROCESSABLE_ENTITY,
-                            detail=f"No match found.")
+        raise http_422_no_match_exception(msg=f'"{x} match not found."')
 
 
 def cost_by_rented_id(movie_id, user_id) -> dict:
@@ -138,14 +136,14 @@ class RentedMovieCost:
     def cost_of_movie(self, user_id: int, movie_id: int) -> int:
         u = user_by_id(user_id=user_id)
         for encoded_str in u.rented_movies:
-            movie_id_date_pair = RentedMovieDecoder().decode(encoded_str)
+            movie_id_date_pair = RentedMovieDecoder().decoded_pair(encoded_str)
             m_id = int(movie_id_date_pair.movie_id)
             if m_id == movie_id:
                 start_date = movie_id_date_pair.start_date
                 days = RentDaysHandler().charged_days(start_day=start_date)
                 movie_cost = RentedMovieCost().cost(days_used=days)
                 return movie_cost
-        raise HTTP422NoMatchException
+        raise http_422_no_match_exception(msg=f'Movie ID {movie_id} not found in rented.')
 
 
 class RentDaysHandler:
@@ -179,13 +177,11 @@ class MovieIDDatePair:
 class RentedMovieDecoder:
     STR_SEPARATOR = ':'
 
-    def decode(self, movie_id_date_str: str):
+    def decoded_pair(self, movie_id_date_str: str):
         movie_id, date = movie_id_date_str.split(self.STR_SEPARATOR)
         return MovieIDDatePair(movie_id=movie_id, start_date=date)
 
 
 class TransactionHandler:
-    def apply_cost(self, user: User, start_day: str) -> None:
-        days = RentDaysHandler().charged_days(start_day=start_day)
-        movie_cost = RentedMovieCost().cost(days_used=days)
-        user.update(dec__balance=movie_cost)
+    def apply_cost(self, user: User, movie_cost: int) -> None:
+        user.update(__raw__={"$inc": {"balance": -movie_cost}})

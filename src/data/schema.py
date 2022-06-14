@@ -16,9 +16,6 @@ class Movie(BaseModel):
     details: str
 
 
-MovieIDList = List[int]
-
-
 class MovieCategories(BaseModel):
     categories: List[Literal[MOVIE_CATEGORIES]]
 

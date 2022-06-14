@@ -33,7 +33,7 @@ class TestRentedMovieDecoder(TestCase):
         from src.data.crud import RentedMovieDecoder
         movie_id = '1'
         date = '2031-09-14'
-        obj = RentedMovieDecoder().decode(f'{movie_id}{RentedMovieDecoder.STR_SEPARATOR}{date}')
+        obj = RentedMovieDecoder().decoded_pair(f'{movie_id}{RentedMovieDecoder.STR_SEPARATOR}{date}')
         self.assertEqual(movie_id, obj.movie_id)
         self.assertEqual(date, obj.start_date)
 
