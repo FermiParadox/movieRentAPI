@@ -1,5 +1,5 @@
+from enum import Enum
 from typing import Any
-
 from fastapi import HTTPException
 from starlette.responses import Response
 from starlette.status import HTTP_422_UNPROCESSABLE_ENTITY
@@ -111,3 +111,22 @@ def raise_http_if_id_doesnt_exist(match: Any):
 
 def cost_by_rented_id(movie_id, user_id):
     raise NotImplementedError
+
+
+class CostPerDay(int, Enum):
+    """Cost in cents.
+    """
+    up_to_3days = 1_00
+    above_3days = 50
+
+
+class RentedMovieCost:
+    def cost(self, days_used: int):
+        # TODO refactor magic number 3 + break method
+        if days_used <= 3:
+            return days_used * CostPerDay.up_to_3days
+
+        cost_3days = 3 * CostPerDay.up_to_3days
+        cost_following_days = (days_used - 3) * CostPerDay.above_3days
+
+        return cost_3days + cost_following_days
