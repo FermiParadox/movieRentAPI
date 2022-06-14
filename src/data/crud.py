@@ -4,9 +4,9 @@ from fastapi import HTTPException
 from starlette.responses import Response
 from starlette.status import HTTP_422_UNPROCESSABLE_ENTITY
 
-from data._base import current_date
-from data.models import Movie, User
-from data.schema import MovieCategories, MovieIDList
+from src.data._base import current_date
+from src.data.models import Movie, User
+from src.data.schema import MovieCategories, MovieIDList
 
 
 def get_all_movies() -> dict:

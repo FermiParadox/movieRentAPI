@@ -3,8 +3,8 @@ from unittest import TestCase
 from mongoengine import disconnect
 from pymongo.mongo_client import MongoClient
 
-from data.database import connect, DBName, connect_to_production_db
-from secret_handler import MongoDBLink
+from src.data.database import connect, DBName, connect_to_production_db
+from src.secret_handler import MongoDBLink
 
 
 class Test(TestCase):

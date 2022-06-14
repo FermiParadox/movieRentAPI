@@ -1,7 +1,7 @@
 from unittest import TestCase
 
-from data.crud import RentedMovieHandler
-from utils import ResponseCodeBracket
+from src.data.crud import RentedMovieHandler
+from src.utils import ResponseCodeBracket
 
 
 class TestRentedMovieHandler(TestCase):

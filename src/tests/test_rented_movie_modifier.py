@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from data.crud import RentedMovieModifier
+from src.data.crud import RentedMovieModifier
 
 
 class TestRentedMovieModifier(TestCase):

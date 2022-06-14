@@ -1,8 +1,8 @@
 from fastapi import FastAPI
 
-from data.database import connect_to_production_db
-from routers import GET_all_movies, GET_movie_by_id, POST_movies_by_cat
-from routers import PUT_rent_movie, PUT_return_movie, PUT_charge
+from src.data.database import connect_to_production_db
+from src.routers import GET_all_movies, PUT_charge, GET_movie_by_id, POST_movies_by_cat, PUT_rent_movie, \
+    PUT_return_movie
 
 connect_to_production_db()
 

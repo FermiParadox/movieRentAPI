@@ -1,7 +1,7 @@
 from unittest import TestCase
 from fastapi.testclient import TestClient
 
-from main import app
+from src.main import app
 
 print(f"Tests in {__name__} don't fail when run individually.\n"
       f"They do fail when running all tests in /tests.\n"
@@ -13,7 +13,7 @@ EXISTING_MOVIE_ID = '2'
 
 class TestAllMovies(TestCase):
     def setUp(self) -> None:
-        from routers._endpoint_paths import ALL_MOVIES
+        from src.routers._endpoint_paths import ALL_MOVIES
         self.url = ALL_MOVIES.full
 
     def test_ok_response(self):
@@ -29,7 +29,7 @@ class TestAllMovies(TestCase):
 
 class TestMoviesByCategory(TestCase):
     def setUp(self) -> None:
-        from routers._endpoint_paths import MOVIES_BY_CAT
+        from src.routers._endpoint_paths import MOVIES_BY_CAT
         self.url = MOVIES_BY_CAT.full
 
     def test_response_contains_list(self):
@@ -53,7 +53,7 @@ class TestMoviesByCategory(TestCase):
 
 class TestMovieByID(TestCase):
     def setUp(self) -> None:
-        from routers._endpoint_paths import MOVIE_BY_ID
+        from src.routers._endpoint_paths import MOVIE_BY_ID
         # FastAPI's testing might be bugged, hence the dirty testing below.
         # (When calling TestClient with `params` it ignores them)
         self.url = MOVIE_BY_ID.stripped_relative
@@ -83,7 +83,7 @@ class TestMovieByID(TestCase):
 
 class TestRentMovie(TestCase):
     def setUp(self) -> None:
-        from routers._endpoint_paths import RENT, RETURN
+        from src.routers._endpoint_paths import RENT, RETURN
 
         self.test_user_id = 1
 
@@ -126,7 +126,7 @@ class TestRentMovie(TestCase):
 
 class TestGetCharge(TestCase):
     def setUp(self) -> None:
-        from routers._endpoint_paths import RENT_COST_BY_MOVIE_ID
+        from src.routers._endpoint_paths import RENT_COST_BY_MOVIE_ID
 
         self.url = RENT_COST_BY_MOVIE_ID.full
         self.cost_url = self.url + '7'

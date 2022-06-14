@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from utils import ResponseCodeBracket
+from src.utils import ResponseCodeBracket
 
 
 class TestResponseCodeBracket(TestCase):

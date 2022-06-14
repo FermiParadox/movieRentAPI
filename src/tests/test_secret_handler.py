@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from secret_handler import MongoDBLink
+from src.secret_handler import MongoDBLink
 
 
 class TestMongoDBLink(TestCase):

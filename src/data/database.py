@@ -2,7 +2,7 @@ from enum import Enum
 import mongoengine
 from pymongo.mongo_client import MongoClient
 
-from secret_handler import MongoDBLink
+from src.secret_handler import MongoDBLink
 
 
 class DBName(str, Enum):
