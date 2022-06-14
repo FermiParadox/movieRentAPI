@@ -1,3 +1,4 @@
+from datetime import datetime
 from enum import Enum
 from functools import lru_cache
 from typing import Any
@@ -5,7 +6,6 @@ from fastapi import HTTPException
 from starlette.responses import Response
 from starlette.status import HTTP_422_UNPROCESSABLE_ENTITY
 
-from src.data._base import current_date
 from src.data.models import Movie, User
 from src.data.schema import MovieCategories, MovieIDList
 
@@ -43,7 +43,7 @@ class RentedMovieModifier:
         return f'{movie_id}:{date}'
 
     def add_rented(self, user: User, movie_id) -> bool:
-        date = current_date()
+        date = RentDaysHandler().current_date_str()
         s = self.rent_movie_str(movie_id=movie_id, date=date)
         return user.update(add_to_set__rented_movies=s)
 
@@ -91,9 +91,13 @@ class RentedMovieHandler:
 
     def return_response(self, modified: bool, user_id: int, movie_id: int) -> Response:
         if modified:
+            self.pay_cost(user_id=user_id)
             return Response(status_code=201, content=f'Movie ID {movie_id} return.')
         else:
             return Response(status_code=400, content=f'Returning movie ID {movie_id} failed.')
+
+    def pay_cost(self, user_id):
+        print('pay_cost not implemented')
 
 
 def raise_http_if_id_doesnt_exist(match: Any):
@@ -124,3 +128,25 @@ class RentedMovieCost:
         cost_following_days = (days_used - 3) * CostPerDay.above_3days
 
         return cost_3days + cost_following_days
+
+
+class RentDaysHandler:
+    def decoded_rent_date(self, stored_str: str):
+        return datetime.strptime(stored_str, '%Y-%m-%d')
+
+    def current_date(self):
+        return datetime.today()
+
+    def current_date_str(self):
+        return self.current_date().strftime('%Y-%m-%d')
+
+    def _days(self, start_day: str):
+        start_date = self.decoded_rent_date(stored_str=start_day)
+        end_date = self.current_date()
+        date_diff = end_date - start_date
+        return date_diff.days
+
+    def charged_days(self, start_day: str) -> int:
+        """If the buyer watches the movie and returns it within a few hours
+        they should still be charged."""
+        return self._days(start_day) + 1
