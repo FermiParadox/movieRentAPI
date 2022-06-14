@@ -93,12 +93,32 @@ class TestRentMovie(TestCase):
         self.return_url = RETURN.full
         self.return_url_movie2 = self.return_url + EXISTING_MOVIE_ID
 
-    def test_ok_response(self):
+    def test_rent_ok(self):
         response = client.put(self.rent_url_movie2, json={"id_": self.test_user_id})
         code = response.status_code
         self.assertTrue(response.ok, msg=f'Response code: {code}')
 
-    def test_return_move(self):
+    def test_rent_movie_raises_422_when_user_no_exist(self):
+        response = client.put(self.rent_url_movie2, json={"id_": 46999345236})
+        code = response.status_code
+        self.assertEqual(422, code)
+
+    def test_rent_movie_raises_422_when_movie_no_exist(self):
+        response = client.put(self.return_url + '8293753', json={"id_": self.test_user_id})
+        code = response.status_code
+        self.assertEqual(422, code)
+
+    def test_return_movie_ok(self):
         response = client.put(self.return_url_movie2, json={"id_": self.test_user_id})
         code = response.status_code
         self.assertTrue(response.ok, msg=f'Response code: {code}')
+
+    def test_return_movie_raises_422_when_user_no_exist(self):
+        response = client.put(self.return_url_movie2, json={"id_": 46999345236})
+        code = response.status_code
+        self.assertEqual(422, code)
+
+    def test_return_movie_raises_422_when_movie_no_exist(self):
+        response = client.put(self.return_url + '8293753', json={"id_": self.test_user_id})
+        code = response.status_code
+        self.assertEqual(422, code)
