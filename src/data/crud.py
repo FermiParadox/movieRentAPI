@@ -101,14 +101,19 @@ class RentedMovieHandler:
         print('pay_cost not implemented')
 
 
+HTTP422NoMatchException = HTTPException(status_code=HTTP_422_UNPROCESSABLE_ENTITY,
+                                        detail=f"No match found.")
+
+
 def raise_http_if_id_doesnt_exist(match: Any):
     if not match:
         raise HTTPException(status_code=HTTP_422_UNPROCESSABLE_ENTITY,
                             detail=f"No match found.")
 
 
-def cost_by_rented_id(movie_id, user_id):
-    raise NotImplementedError
+def cost_by_rented_id(movie_id, user_id) -> dict:
+    cost = RentedMovieCost().cost_of_movie(movie_id=movie_id, user_id=user_id)
+    return {'cost_in_cents': cost}
 
 
 class CostPerDay(int, Enum):
@@ -129,6 +134,18 @@ class RentedMovieCost:
         cost_following_days = (days_used - 3) * CostPerDay.above_3days
 
         return cost_3days + cost_following_days
+
+    def cost_of_movie(self, user_id: int, movie_id: int) -> int:
+        u = user_by_id(user_id=user_id)
+        for encoded_str in u.rented_movies:
+            movie_id_date_pair = RentedMovieDecoder().decode(encoded_str)
+            m_id = int(movie_id_date_pair.movie_id)
+            if m_id == movie_id:
+                start_date = movie_id_date_pair.start_date
+                days = RentDaysHandler().charged_days(start_day=start_date)
+                movie_cost = RentedMovieCost().cost(days_used=days)
+                return movie_cost
+        raise HTTP422NoMatchException
 
 
 class RentDaysHandler:

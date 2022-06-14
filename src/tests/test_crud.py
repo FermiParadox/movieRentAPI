@@ -1,6 +1,9 @@
 from unittest import TestCase
 
+from mongoengine import disconnect
+
 from src.data.crud import RentedMovieCost, CostPerDay
+from src.data.database import connect_to_production_db
 
 
 class TestRentedMovieCost(TestCase):
@@ -17,3 +20,11 @@ class TestRentedMovieCost(TestCase):
         cost = RentedMovieCost().cost(13)
         expected = CostPerDay.up_to_3days * 3 + CostPerDay.above_3days * 10
         self.assertEqual(expected, cost)
+
+    def test_cost_of_movie_is_int_at_least_1(self):
+        disconnect()
+        connect_to_production_db()
+        cost = RentedMovieCost().cost_of_movie(user_id=1, movie_id=7)
+        self.assertIsInstance(cost, int)
+        self.assertGreaterEqual(cost, 1)
+        disconnect()
