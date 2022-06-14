@@ -43,7 +43,7 @@ class RentedMovieModifier:
         s = self.rent_movie_str(movie_id=movie_id, date=date)
         return user.update(add_to_set__rented_movies=s)
 
-    def return_rented(self, user: User, movie_id):
+    def delete_rented(self, user: User, movie_id):
         raise NotImplementedError
 
 
@@ -72,8 +72,8 @@ class RentedMovieHandler:
         m = movie_by_id(movie_id=movie_id)
         raise_http_if_id_doesnt_exist(match=m)
 
-        modified = modifier.return_rented(user=u, movie_id=movie_id)
-        self.stop_charging(user_id=user_id)
+        modified = modifier.delete_rented(user=u, movie_id=movie_id)
+        self.stop_charging_and_pay(user_id=user_id)
         return self.return_response(modified=modified, movie_id=movie_id)
 
     @staticmethod
@@ -93,7 +93,7 @@ class RentedMovieHandler:
     def start_charging(self, user_id):
         print(f'"start_charging" Not implemented ')
 
-    def stop_charging(self, user_id):
+    def stop_charging_and_pay(self, user_id):
         print('"stop_charging" not implemented')
 
 
