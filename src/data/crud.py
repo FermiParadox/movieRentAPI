@@ -41,7 +41,7 @@ def user_by_id(user_id) -> User:
 
 class RentedMovieModifier:
     def rent_movie_str(self, movie_id, date: str) -> str:
-        return f'{movie_id}{RentedMovieDecoder.MOVIE_ID_DATE_SEPARATOR}{date}'
+        return f'{movie_id}{RentedMovieDecoder.STR_SEPARATOR}{date}'
 
     def add_rented(self, user: User, movie_id) -> bool:
         date = RentDaysHandler().current_date_str()
@@ -50,7 +50,7 @@ class RentedMovieModifier:
 
     def delete_rented(self, user: User, movie_id) -> bool:
         rented_movies = user.rented_movies
-        str_to_remove = f'{movie_id}{RentedMovieDecoder.MOVIE_ID_DATE_SEPARATOR}'
+        str_to_remove = f'{movie_id}{RentedMovieDecoder.STR_SEPARATOR}'
         new_rented_movies = [i for i in rented_movies if not i.startswith(str_to_remove)]
         modification = user.update(set__rented_movies=new_rented_movies)
         return modification
@@ -160,10 +160,10 @@ class MovieIDDatePair:
 
 
 class RentedMovieDecoder:
-    MOVIE_ID_DATE_SEPARATOR = ':'
+    STR_SEPARATOR = ':'
 
     def decode(self, movie_id_date_str: str):
-        movie_id, date = movie_id_date_str.split(self.MOVIE_ID_DATE_SEPARATOR)
+        movie_id, date = movie_id_date_str.split(self.STR_SEPARATOR)
         return MovieIDDatePair(movie_id=movie_id, start_date=date)
 
 
