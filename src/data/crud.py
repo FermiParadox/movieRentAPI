@@ -107,6 +107,10 @@ def raise_http_if_id_doesnt_exist(match: Any):
                             detail=f"No match found.")
 
 
+def cost_by_rented_id(movie_id, user_id):
+    raise NotImplementedError
+
+
 class CostPerDay(int, Enum):
     """Cost in cents.
     """
