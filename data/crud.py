@@ -23,7 +23,7 @@ def movies_by_category(categories: MovieCategories) -> MovieIDList:
     return [m.title for m in movies]
 
 
-def movie_db_obj_by_id(movie_id: int):
+def movie_db_obj_by_id(movie_id: int) -> Movie:
     return Movie.objects(id_=movie_id).first()
 
 
@@ -46,8 +46,12 @@ class RentedMovieModifier:
         s = self.rent_movie_str(movie_id=movie_id, date=date)
         return user.update(add_to_set__rented_movies=s)
 
-    def delete_rented(self, user: User, movie_id):
-        raise NotImplementedError
+    def delete_rented(self, user: User, movie_id) -> bool:
+        rented_movies = user.rented_movies
+        str_to_remove = f'{movie_id}:'
+        new_rented_movies = [i for i in rented_movies if not i.startswith(str_to_remove)]
+        modification = user.update(set__rented_movies=new_rented_movies)
+        return modification
 
 
 class RentedMovieHandler:
@@ -76,8 +80,7 @@ class RentedMovieHandler:
         raise_http_if_id_doesnt_exist(match=m)
 
         modified = modifier.delete_rented(user=u, movie_id=movie_id)
-        self.stop_charging_and_pay(user_id=user_id)
-        return self.return_response(modified=modified, movie_id=movie_id)
+        return self.return_response(modified=modified, user_id=user_id, movie_id=movie_id)
 
     @staticmethod
     def rent_response(modified: bool, movie_id: int) -> Response:
@@ -86,9 +89,9 @@ class RentedMovieHandler:
         else:
             return Response(status_code=400, content=f'Renting movie ID {movie_id} failed.')
 
-    @staticmethod
-    def return_response(modified: bool, movie_id: int) -> Response:
+    def return_response(self, modified: bool, user_id: int, movie_id: int) -> Response:
         if modified:
+            self.stop_charging_and_pay(user_id=user_id)
             return Response(status_code=201, content=f'Movie ID {movie_id} return.')
         else:
             return Response(status_code=400, content=f'Returning movie ID {movie_id} failed.')

@@ -83,11 +83,22 @@ class TestMovieByID(TestCase):
 
 class TestRentMovie(TestCase):
     def setUp(self) -> None:
-        from routers._endpoint_paths import RENT
-        self.url = RENT.full
-        self.url_movie2 = self.url + EXISTING_MOVIE_ID
+        from routers._endpoint_paths import RENT, RETURN
+
+        self.test_user_id = 1
+
+        self.rent_url = RENT.full
+        self.rent_url_movie2 = self.rent_url + EXISTING_MOVIE_ID
+
+        self.return_url = RETURN.full
+        self.return_url_movie2 = self.return_url + EXISTING_MOVIE_ID
 
     def test_ok_response(self):
-        response = client.put(self.url_movie2, json={"id_": 1})
+        response = client.put(self.rent_url_movie2, json={"id_": self.test_user_id})
+        code = response.status_code
+        self.assertTrue(response.ok, msg=f'Response code: {code}')
+
+    def test_return_move(self):
+        response = client.put(self.return_url_movie2, json={"id_": self.test_user_id})
         code = response.status_code
         self.assertTrue(response.ok, msg=f'Response code: {code}')
