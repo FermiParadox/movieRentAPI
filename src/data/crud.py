@@ -1,4 +1,5 @@
 from enum import Enum
+from functools import lru_cache
 from typing import Any
 from fastapi import HTTPException
 from starlette.responses import Response
@@ -66,7 +67,6 @@ class RentedMovieHandler:
         raise_http_if_id_doesnt_exist(match=m)
 
         modified = modifier.add_rented(user=u, movie_id=movie_id)
-        self.start_charging(user_id=user_id)
         return self.rent_response(modified=modified, movie_id=movie_id)
 
     def return_movie(self, movie_id, user_id):
@@ -91,16 +91,9 @@ class RentedMovieHandler:
 
     def return_response(self, modified: bool, user_id: int, movie_id: int) -> Response:
         if modified:
-            self.stop_charging_and_pay(user_id=user_id)
             return Response(status_code=201, content=f'Movie ID {movie_id} return.')
         else:
             return Response(status_code=400, content=f'Returning movie ID {movie_id} failed.')
-
-    def start_charging(self, user_id):
-        print(f'"start_charging" Not implemented ')
-
-    def stop_charging_and_pay(self, user_id):
-        print('"stop_charging" not implemented')
 
 
 def raise_http_if_id_doesnt_exist(match: Any):
@@ -121,6 +114,7 @@ class CostPerDay(int, Enum):
 
 
 class RentedMovieCost:
+    @lru_cache
     def cost(self, days_used: int):
         # TODO refactor magic number 3 + break method
         if days_used <= 3:
