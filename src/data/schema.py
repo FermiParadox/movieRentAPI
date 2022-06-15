@@ -25,5 +25,5 @@ class UserID(BaseModel):
 
 
 class Login(BaseModel):
-    name: str
-    passphrase: str
+    user_id: str
+    passphrase_hash: str

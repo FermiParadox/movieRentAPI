@@ -45,13 +45,15 @@ def cost_by_rented_id(movie_id, user_id) -> dict:
     return {'cost_in_cents': cost}
 
 
-def login(name: str, passphrase: str):
-    raise_if_no_match(name=name, passphrase=passphrase)
+def login(user_id: str, passphrase_hash: str):
+    raise_if_no_match(user_id=user_id, passphrase_hash=passphrase_hash)
     return {"token": signed_jwt_token()}
 
 
-def raise_if_no_match(name: str, passphrase: str):
-    print('login checks not implemented')
+def raise_if_no_match(user_id: str, passphrase_hash: str):
+    u = user_by_id(user_id)
+    if not u.passphrase_hash == passphrase_hash:
+        raise http_422_no_match_exception(msg='User ID or passphrase_hash are wrong.')
 
 
 class RentedMovieModifier:
