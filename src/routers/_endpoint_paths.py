@@ -41,3 +41,7 @@ MOVIE_BY_ID = EndpointPath(fastapi_format='/movie_details/{movie_id}')
 RENT = EndpointPath(fastapi_format='/rent_movie/{movie_id}')
 RETURN = EndpointPath(fastapi_format='/return/{movie_id}')
 RENT_COST_BY_MOVIE_ID = EndpointPath(fastapi_format='/cost/{movie_id}')
+LOGIN = EndpointPath(fastapi_format='/login')
+
+PATHS_PROTECTED_WITH_JWT: Iterable[EndpointPath]
+PATHS_PROTECTED_WITH_JWT = {RENT, RETURN, RENT_COST_BY_MOVIE_ID}

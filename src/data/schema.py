@@ -22,3 +22,8 @@ class MovieCategories(BaseModel):
 
 class UserID(BaseModel):
     id_: ConstrainedIntMongo
+
+
+class Login(BaseModel):
+    name: str
+    passphrase: str

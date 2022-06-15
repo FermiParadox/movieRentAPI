@@ -1,6 +1,7 @@
 from unittest import TestCase
 from fastapi.testclient import TestClient
 
+from config import JWT_PRIVATE_KEY, JWT_ALGORITHM, JWT_SECRET_MESSAGE
 from src.main import app
 
 print(f"Tests in {__name__} don't fail when run individually.\n"
@@ -81,6 +82,35 @@ class TestMovieByID(TestCase):
         self.assertTrue(response.json()['categories'])
 
 
+class TestLogin(TestCase):
+    def jwt_token(self):
+        from src.routers._endpoint_paths import LOGIN
+        response = client.post(LOGIN.full, json={"name": 'John',
+                                                 "passphrase": "12345",
+                                                 "id_": 1})
+        return response.json()["token"]
+
+    def decoded_jwt_user_id(self):
+        import jwt
+        decoded = jwt.decode(self.jwt_token(), key=JWT_PRIVATE_KEY, algorithms=JWT_ALGORITHM)
+        return decoded['user_id']
+
+    def setUp(self) -> None:
+        from src.routers._endpoint_paths import LOGIN
+        self.test_user_id = 1
+        self.login_url = LOGIN.full
+
+    def test_login_responds_ok(self):
+        response = client.post(self.login_url, json={"name": 'John',
+                                                     "passphrase": "12345",
+                                                     "id_": self.test_user_id})
+        code = response.status_code
+        self.assertTrue(response.ok, msg=f'Response code: {code}')
+
+    def test_login_provides_jwt(self):
+        self.assertEqual(self.decoded_jwt_user_id(), JWT_SECRET_MESSAGE)
+
+
 class TestRentMovie(TestCase):
     def setUp(self) -> None:
         from src.routers._endpoint_paths import RENT, RETURN
@@ -92,34 +122,35 @@ class TestRentMovie(TestCase):
 
         self.return_url = RETURN.full
         self.return_url_movie2 = self.return_url + EXISTING_MOVIE_ID
+        self.headers = {"token": TestLogin().jwt_token()}
 
     def test_rent_movie_raises_422_when_user_no_exist(self):
-        response = client.put(self.rent_url_movie2, json={"id_": 46999345236})
+        response = client.put(self.rent_url_movie2, json={"id_": 46999345236}, headers=self.headers)
         code = response.status_code
         self.assertEqual(422, code)
 
     def test_rent_movie_raises_422_when_movie_no_exist(self):
-        response = client.put(self.return_url + '8293753', json={"id_": self.test_user_id})
+        response = client.put(self.return_url + '8293753', json={"id_": self.test_user_id}, headers=self.headers)
         code = response.status_code
         self.assertEqual(422, code)
 
     def test_rent_ok(self):
-        response = client.put(self.rent_url_movie2, json={"id_": self.test_user_id})
+        response = client.put(self.rent_url_movie2, json={"id_": self.test_user_id}, headers=self.headers)
         code = response.status_code
         self.assertTrue(response.ok, msg=f'Response code: {code}')
 
     def test_return_movie_ok(self):
-        response = client.put(self.return_url_movie2, json={"id_": self.test_user_id})
+        response = client.put(self.return_url_movie2, json={"id_": self.test_user_id}, headers=self.headers)
         code = response.status_code
         self.assertTrue(response.ok, msg=f'Response code: {code}. {response.content}')
 
     def test_return_movie_raises_422_when_user_no_exist(self):
-        response = client.put(self.return_url_movie2, json={"id_": 46999345236})
+        response = client.put(self.return_url_movie2, json={"id_": 46999345236}, headers=self.headers)
         code = response.status_code
         self.assertEqual(422, code)
 
     def test_return_movie_raises_422_when_movie_no_exist(self):
-        response = client.put(self.return_url + '8293753', json={"id_": self.test_user_id})
+        response = client.put(self.return_url + '8293753', json={"id_": self.test_user_id}, headers=self.headers)
         code = response.status_code
         self.assertEqual(422, code)
 
@@ -130,10 +161,10 @@ class TestGetCharge(TestCase):
 
         self.url = RENT_COST_BY_MOVIE_ID.full
         self.cost_url = self.url + '7'
-
         self.test_user_id = 1
+        self.headers = {"token": TestLogin().jwt_token()}
 
     def test_response_is_ok(self):
-        response = client.put(self.cost_url, json={"id_": self.test_user_id})
+        response = client.put(self.cost_url, json={"id_": self.test_user_id}, headers=self.headers)
         code = response.status_code
         self.assertTrue(response.ok, msg=f'Response code: {code}')

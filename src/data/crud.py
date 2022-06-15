@@ -9,6 +9,7 @@ from starlette.status import HTTP_422_UNPROCESSABLE_ENTITY
 
 from src.data.models import Movie, User
 from src.data.schema import MovieCategories
+from src.middleware.jwt_middleware import signed_jwt_token
 
 
 def get_all_movies() -> dict:
@@ -37,6 +38,20 @@ def movie_by_id(movie_id: int) -> dict:
 
 def user_by_id(user_id) -> User:
     return User.objects(id_=user_id).first()
+
+
+def cost_by_rented_id(movie_id, user_id) -> dict:
+    cost = RentedMovieCost().cost_of_movie(movie_id=movie_id, user_id=user_id)
+    return {'cost_in_cents': cost}
+
+
+def login(name: str, passphrase: str):
+    raise_if_no_match(name=name, passphrase=passphrase)
+    return {"token": signed_jwt_token()}
+
+
+def raise_if_no_match(name: str, passphrase: str):
+    print('login checks not implemented')
 
 
 class RentedMovieModifier:
@@ -99,21 +114,6 @@ class RentedMovieHandler:
             return Response(status_code=400, content=f'Returning movie ID {movie_id} failed.')
 
 
-def http_422_no_match_exception(msg="No match found."):
-    return HTTPException(status_code=HTTP_422_UNPROCESSABLE_ENTITY,
-                         detail=msg)
-
-
-def raise_http_if_x_doesnt_exist(match: Any, x):
-    if not match:
-        raise http_422_no_match_exception(msg=f'"{x} match not found."')
-
-
-def cost_by_rented_id(movie_id, user_id) -> dict:
-    cost = RentedMovieCost().cost_of_movie(movie_id=movie_id, user_id=user_id)
-    return {'cost_in_cents': cost}
-
-
 class CostPerDay(int, Enum):
     """Cost in cents.
     """
@@ -168,7 +168,7 @@ class RentDaysHandler:
         return self._days(start_day) + 1
 
 
-@dataclass
+@dataclass(frozen=True)
 class MovieIDDatePair:
     movie_id: str
     start_date: str
@@ -185,3 +185,13 @@ class RentedMovieDecoder:
 class TransactionHandler:
     def apply_cost(self, user: User, movie_cost: int) -> None:
         user.update(__raw__={"$inc": {"balance": -movie_cost}})
+
+
+def http_422_no_match_exception(msg="No match found."):
+    return HTTPException(status_code=HTTP_422_UNPROCESSABLE_ENTITY,
+                         detail=msg)
+
+
+def raise_http_if_x_doesnt_exist(match: Any, x):
+    if not match:
+        raise http_422_no_match_exception(msg=f'"{x} match not found."')
