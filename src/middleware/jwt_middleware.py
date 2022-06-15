@@ -13,7 +13,7 @@ from src.routers._endpoint_paths import PATHS_PROTECTED_WITH_JWT, EndpointPath
 HEADER_NAME_OF_TOKEN = "token"
 
 
-async def middleware_jwt(req: Request, call_next):
+async def middleware_jwt(req: Request, call_next) -> Response:
     if not JWT_MIDDLEWARE_ACTIVE:
         return await call_next(req)
 
