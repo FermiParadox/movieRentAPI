@@ -85,8 +85,8 @@ class TestMovieByID(TestCase):
 class TestLogin(TestCase):
     def jwt_token(self):
         from src.routers._endpoint_paths import LOGIN
-        response = client.post(LOGIN.full, json={"name": 'John',
-                                                 "passphrase": "12345",
+        response = client.post(LOGIN.full, json={"user_id": '1',
+                                                 "passphrase_hash": "123",
                                                  "id_": 1})
         return response.json()["token"]
 
@@ -101,8 +101,8 @@ class TestLogin(TestCase):
         self.login_url = LOGIN.full
 
     def test_login_responds_ok(self):
-        response = client.post(self.login_url, json={"name": 'John',
-                                                     "passphrase": "12345",
+        response = client.post(self.login_url, json={"user_id": '1',
+                                                     "passphrase_hash": "123",
                                                      "id_": self.test_user_id})
         code = response.status_code
         self.assertTrue(response.ok, msg=f'Response code: {code}')
