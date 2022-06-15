@@ -1,8 +1,6 @@
 from dataclasses import dataclass
 from re import sub
-
-
-HOME = 'http://127.0.0.1:8000'
+from typing import Iterable, NoReturn
 
 
 class PathCreationError(Exception):
@@ -14,28 +12,29 @@ class EndpointPath:
     fastapi_format: str
 
     @property
-    def stripped_relative(self):
+    def stripped_relative(self) -> str:
         return sub(r'\{.+}', '', self.fastapi_format)
 
     @property
-    def full(self):
+    def full(self) -> str:
         return HOME + self.stripped_relative
 
     def __post_init__(self):
         self.raise_if_no_slash_at_start()
         self.raise_if_slash_at_end()
 
-    def raise_if_no_slash_at_start(self):
+    def raise_if_no_slash_at_start(self) -> NoReturn:
         if not self.fastapi_format.startswith('/'):
             raise PathCreationError("Relative path must start with a slash / .")
 
-    def raise_if_slash_at_end(self):
+    def raise_if_slash_at_end(self) -> NoReturn:
         """ '...the prefix must not include a final /'
         See https://fastapi.tiangolo.com/tutorial/bigger-applications/#another-module-with-apirouter"""
         if self.fastapi_format.endswith('/'):
             raise PathCreationError("Relative path must not end with a slash / .")
 
 
+HOME = 'http://127.0.0.1:8000'
 ALL_MOVIES = EndpointPath(fastapi_format='/all_movies')
 MOVIES_BY_CAT = EndpointPath(fastapi_format='/movies_by_cat')
 MOVIE_BY_ID = EndpointPath(fastapi_format='/movie_details/{movie_id}')
