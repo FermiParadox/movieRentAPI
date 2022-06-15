@@ -12,8 +12,8 @@ class MongoDBLink:
 
     def _warn_and_import_from_config(self) -> str:
         self._warn_no_secrets_file()
-        from config import MONGO_DB_LINK
-        return MONGO_DB_LINK
+        from config import MONGODB_LINK
+        return MONGODB_LINK
 
     def _warn_no_secrets_file(self) -> NoReturn:
         warnings.warn(message="\nLoading secrets from config.py, instead of IGNORE_GIT_SECRETS.py.\n"

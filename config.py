@@ -9,4 +9,4 @@ JWT_DURATION_HOURS = 24 * 30
 # since that filename is ignored on git commits.
 
 # Or edit this (WARNING: don't accidentally push it on GitHub)
-MONGO_DB_LINK = 'not_real_link'
+MONGODB_LINK = 'not_real_link'
