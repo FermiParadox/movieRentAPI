@@ -17,12 +17,12 @@ Searching for a movie by categories A, B returns all movies that are either A or
 
 User is charged for each day he rent’s a movie. Renting the movie for less than a day counts as 1 day (otherwise he’d be charged too little).
 
-Additionally
-    • I added a /login, which provides a JWT 
-    • I applied a middleware, which checks for the presence and validity of the aforementioned JWT in the request headers, before granting access to: 
-        ◦ rent 
-        ◦ return 
-        ◦ see cost
+Additionally:   
+- I added a /login, which provides a JWT 
+- I applied a middleware, which checks for the presence and validity of the aforementioned JWT in the request headers, before granting access to: 
+  - rent 
+  - return 
+  - see cost
 
 # DB + ODM
 
