@@ -8,7 +8,7 @@ All requirements defined as Use Cases in the Assignment have been implemented.
 
 Instead of passing movie titles to endpoints when looking for a movie, I’m passing the movie_id to avoid issues with non-english letters. 
 
-Searching for a movie by categories A, B returns all moves that are either A or B. 
+Searching for a movie by categories A, B returns all movies that are either A or B. 
 
 User is charged for each day he rent’s a movie. Renting the moving for less than a day counts as 1 day (otherwise he’d be charged too little).
 
