@@ -10,6 +10,7 @@ from starlette.status import HTTP_422_UNPROCESSABLE_ENTITY
 from src.data.models import Movie, User
 from src.data.schema import MovieCategories
 from src.middleware.jwt_middleware import signed_jwt_token
+from src.utils import IntStrType
 
 
 def get_all_movies() -> dict:
@@ -32,25 +33,25 @@ def movie_db_obj_by_id(movie_id: int) -> Movie:
 
 def movie_by_id(movie_id: int) -> dict:
     m = movie_db_obj_by_id(movie_id)
-    raise_http_if_x_doesnt_exist(match=m, x=f'Movie ID {movie_id}')
+    raise_http_if_x_doesnt_exist(x=m, msg=f'Movie ID {movie_id}')
     return {'title': m.title, 'id_': m.id_, 'categories': m.categories, 'details': m.details}
 
 
-def user_by_id(user_id) -> User:
+def user_by_id(user_id: IntStrType) -> User:
     return User.objects(id_=user_id).first()
 
 
-def cost_by_rented_id(movie_id, user_id) -> dict:
+def cost_by_rented_id(movie_id: IntStrType, user_id: IntStrType) -> dict:
     cost = RentedMovieCost().cost_of_movie(movie_id=movie_id, user_id=user_id)
     return {'cost_in_cents': cost}
 
 
 def login(user_id: str, passphrase_hash: str):
-    raise_if_no_match(user_id=user_id, passphrase_hash=passphrase_hash)
+    raise_if_user_pass_no_match(user_id=user_id, passphrase_hash=passphrase_hash)
     return {"token": signed_jwt_token()}
 
 
-def raise_if_no_match(user_id: str, passphrase_hash: str):
+def raise_if_user_pass_no_match(user_id: str, passphrase_hash: str):
     u = user_by_id(user_id)
     if not u.passphrase_hash == passphrase_hash:
         raise http_422_no_match_exception(msg='User ID or passphrase_hash are wrong.')
@@ -60,17 +61,19 @@ class RentedMovieModifier:
     def rented_movie_str(self, movie_id: IntStrType, date: str) -> str:
         return f'{movie_id}{RentedMovieDecoder.STR_SEPARATOR}{date}'
 
-    def add_rented(self, user: User, movie_id) -> bool:
+    def add_rented(self, user: User, movie_id: IntStrType) -> bool:
         date = RentDaysHandler().current_date_str()
         s = self.rented_movie_str(movie_id=movie_id, date=date)
         return user.update(add_to_set__rented_movies=s)
 
-    def delete_rented(self, user: User, movie_id) -> bool:
+    def store_rented_movies(self, user: User, movies: list) -> bool:
+        return user.update(set__rented_movies=movies)
+
+    def delete_rented(self, user: User, movie_id: IntStrType) -> bool:
         rented_movies = user.rented_movies
         str_to_remove = f'{movie_id}{RentedMovieDecoder.STR_SEPARATOR}'
         new_rented_movies = [i for i in rented_movies if not i.startswith(str_to_remove)]
-        modification = user.update(set__rented_movies=new_rented_movies)
-        return modification
+        return self.store_rented_movies(user=user, movies=new_rented_movies)
 
 
 class RentedMovieHandler:
@@ -79,23 +82,23 @@ class RentedMovieHandler:
 
     def _rent_movie(self, movie_id: int, user_id: str, modifier: RentedMovieModifier):
         u = user_by_id(user_id=user_id)
-        raise_http_if_x_doesnt_exist(match=u, x=f'User ID {user_id}')
+        raise_http_if_x_doesnt_exist(x=u, msg=f'User ID {user_id}')
 
         m = movie_by_id(movie_id=movie_id)
-        raise_http_if_x_doesnt_exist(match=m, x=f'Movie ID {movie_id}')
+        raise_http_if_x_doesnt_exist(x=m, msg=f'Movie ID {movie_id}')
 
         modified = modifier.add_rented(user=u, movie_id=movie_id)
         return self.rent_response(modified=modified, movie_id=movie_id)
 
-    def return_movie(self, movie_id, user_id):
+    def return_movie(self, movie_id: IntStrType, user_id: IntStrType):
         return self._return_movie(movie_id=movie_id, user_id=user_id, modifier=RentedMovieModifier())
 
-    def _return_movie(self, movie_id, user_id, modifier: RentedMovieModifier):
+    def _return_movie(self, movie_id: IntStrType, user_id: IntStrType, modifier: RentedMovieModifier):
         u = user_by_id(user_id=user_id)
-        raise_http_if_x_doesnt_exist(match=u, x=f'User ID {user_id}')
+        raise_http_if_x_doesnt_exist(x=u, msg=f'User ID {user_id}')
 
         m = movie_db_obj_by_id(movie_id=movie_id)
-        raise_http_if_x_doesnt_exist(match=m, x=f'Movie ID {movie_id}')
+        raise_http_if_x_doesnt_exist(x=m, msg=f'Movie ID {movie_id}')
 
         cost = RentedMovieCost().cost_of_movie(movie_id=movie_id, user_id=user_id)
         TransactionHandler().apply_cost(user=u, movie_cost=cost)
@@ -194,6 +197,6 @@ def http_422_no_match_exception(msg="No match found."):
                          detail=msg)
 
 
-def raise_http_if_x_doesnt_exist(match: Any, x):
-    if not match:
-        raise http_422_no_match_exception(msg=f'"{x} match not found."')
+def raise_http_if_x_doesnt_exist(x: Any, msg: str):
+    if not x:
+        raise http_422_no_match_exception(msg=f'"{msg} match not found."')
