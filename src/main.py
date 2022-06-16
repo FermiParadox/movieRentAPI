@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from starlette.requests import Request
 from starlette.responses import Response
 
 from src.data.database import connect_to_production_db
@@ -20,7 +21,7 @@ app.include_router(POST_login.router)
 
 
 @app.middleware("http")
-async def middleware_jwt_(req, call_next) -> Response:
+async def middleware_jwt_(req: Request, call_next) -> Response:
     return await middleware_jwt(req, call_next)
 
 
