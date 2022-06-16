@@ -37,6 +37,7 @@ Code coverage is about 96%. Of course there’s much more that could be tested. 
 
 # Bugs
 Individually running `test_main.py` works fine. When running all tests, tests of `test_main.py` fail with: 
-	"mongoengine.connection.ConnectionFailure: You have not defined a default connection". 
+
+> "mongoengine.connection.ConnectionFailure: You have not defined a default connection". 
 
 It might be mongoengine related.
