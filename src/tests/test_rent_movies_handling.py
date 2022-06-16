@@ -24,7 +24,7 @@ class TestRentedMovieModifier(TestCase):
         movie_id = 1
         expect = f'{movie_id}{RentedMovieDecoder.STR_SEPARATOR}{date}'
 
-        result = RentedMovieModifier().rent_movie_str(movie_id=1, date=date)
+        result = RentedMovieModifier().rented_movie_str(movie_id=1, date=date)
         self.assertEqual(expect, result)
 
 

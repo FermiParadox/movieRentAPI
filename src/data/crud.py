@@ -57,12 +57,12 @@ def raise_if_no_match(user_id: str, passphrase_hash: str):
 
 
 class RentedMovieModifier:
-    def rent_movie_str(self, movie_id, date: str) -> str:
+    def rented_movie_str(self, movie_id: IntStrType, date: str) -> str:
         return f'{movie_id}{RentedMovieDecoder.STR_SEPARATOR}{date}'
 
     def add_rented(self, user: User, movie_id) -> bool:
         date = RentDaysHandler().current_date_str()
-        s = self.rent_movie_str(movie_id=movie_id, date=date)
+        s = self.rented_movie_str(movie_id=movie_id, date=date)
         return user.update(add_to_set__rented_movies=s)
 
     def delete_rented(self, user: User, movie_id) -> bool:
