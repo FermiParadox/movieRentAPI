@@ -38,7 +38,7 @@ I’d normally break all functions/methods into tiny pieces (Single Responsibili
 Likewise I could have used much more often dependency injection and dependency inversion, which would improve the code by reducing strong coupling and make it more testable. 
 
 # Testing
-Code coverage is about 96%. Of course there’s much more that could be tested. Despite the seemingly large coverage, the number of implemented tests are a fraction of what was really needed.
+Code coverage is about <strike>96%</strike>[correction:] 82%. Of course there’s much more that could be tested. Despite the seemingly large coverage, the number of implemented tests are a fraction of what was really needed.
 
 # Bugs
 Individually running `test_main.py` works fine. When running all tests, tests of `test_main.py` fail with: 
