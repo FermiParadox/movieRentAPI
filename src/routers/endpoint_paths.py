@@ -17,6 +17,10 @@ class EndpointPath:
 
     @property
     def stripped_relative(self) -> str:
+        """Example:
+        from the FastAPI formatted: /users/{user_id}
+        return everything without: {user_id}
+        """
         return sub(r'\{.+}', '', self.fastapi_format)
 
     @property
