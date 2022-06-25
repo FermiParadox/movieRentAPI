@@ -5,6 +5,6 @@ from src.routers import endpoint_paths
 import src.data.crud
 
 
-@router.get(path=_endpoint_paths.MOVIE_BY_ID.fastapi_format)
+@router.get(path=endpoint_paths.MOVIE_BY_ID.fastapi_format)
 async def get_movie_by_id(movie_id: int) -> Response:
     return JSONResponse(content=src.data.crud.movie_by_id(movie_id))

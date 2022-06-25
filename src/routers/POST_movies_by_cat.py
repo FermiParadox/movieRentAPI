@@ -6,6 +6,6 @@ from src.routers import endpoint_paths
 import src.data.crud
 
 
-@router.post(path=_endpoint_paths.MOVIES_BY_CAT.fastapi_format)
+@router.post(path=endpoint_paths.MOVIES_BY_CAT.fastapi_format)
 async def post_movies_by_category(categories: MovieCategories) -> Response:
     return JSONResponse(src.data.crud.movies_by_category(categories))
