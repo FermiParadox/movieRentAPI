@@ -1,5 +1,6 @@
+from dataclasses import dataclass, field
 from datetime import datetime, timedelta
-from typing import Iterable, Dict
+from typing import Iterable, Dict, FrozenSet
 
 from starlette.datastructures import Headers
 from starlette.requests import Request
@@ -17,7 +18,7 @@ async def middleware_jwt(req: Request, call_next) -> Response:
     if not JWT_MIDDLEWARE_ACTIVE:
         return await call_next(req)
 
-    if not is_protected_path(req, paths_protected=PATHS_PROTECTED_WITH_JWT):
+    if not is_protected_path(req, paths_protected=JWTPaths.protected):
         return await call_next(req)
 
     headers = req.headers
@@ -70,6 +71,7 @@ def signed_jwt_token(duration_h: float = JWT_DURATION_HOURS) -> str:
     return jwt.encode(payload=payload, key=JWT_PRIVATE_KEY, algorithm=JWT_ALGORITHM)
 
 
-PATHS_IGNORED_BY_JWT: Iterable[EndpointPath]
-PATHS_IGNORED_BY_JWT = {ALL_MOVIES, MOVIES_BY_CAT, MOVIE_BY_ID, LOGIN}
-PATHS_PROTECTED_WITH_JWT = ALL_ENDPOINTS - PATHS_IGNORED_BY_JWT
+@dataclass(frozen=True)
+class JWTPaths:
+    ignored: FrozenSet[EndpointPath] = frozenset({ALL_MOVIES, MOVIES_BY_CAT, MOVIE_BY_ID, LOGIN})
+    protected: FrozenSet[EndpointPath] = frozenset(ALL_ENDPOINTS - ignored)
