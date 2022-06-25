@@ -65,7 +65,7 @@ def token_is_valid(decoded_token: Dict) -> bool:
 
 def signed_jwt_token(duration_h: float = JWT_DURATION_HOURS) -> str:
     expiration = datetime.utcnow() + timedelta(hours=duration_h)
-    d = {"user_id": 'some_stored_value_server-side', "exp": expiration}
+    payload = {"user_id": 'some_stored_value_server-side', "exp": expiration}
     # (function output can be tested here: https://jwt.io/ ; displays local time)
-    return jwt.encode(payload=d, key=JWT_PRIVATE_KEY, algorithm=JWT_ALGORITHM)
+    return jwt.encode(payload=payload, key=JWT_PRIVATE_KEY, algorithm=JWT_ALGORITHM)
 
