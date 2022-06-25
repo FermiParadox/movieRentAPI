@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from re import sub
 
 from src.utils import OptionalRaise
@@ -6,6 +6,9 @@ from src.utils import OptionalRaise
 
 class PathCreationError(Exception):
     pass
+
+
+ALL_ENDPOINTS = set()
 
 
 @dataclass(frozen=True)
@@ -21,6 +24,7 @@ class EndpointPath:
         return HOME + self.stripped_relative
 
     def __post_init__(self) -> None:
+        ALL_ENDPOINTS.add(self)
         self.raise_if_no_slash_at_start()
         self.raise_if_slash_at_end()
 
