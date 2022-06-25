@@ -1,4 +1,4 @@
-from typing import Union, Literal
+from typing import Union, Literal, Optional, NoReturn
 
 IntStrType = Union[int, str]
 
@@ -22,3 +22,6 @@ class ResponseCodeBracket:
 
     def code_5xx(self, code: IntStrType) -> bool:
         return self._code_xxx(code=code, first_digit=5)
+
+
+OptionalRaise = Optional[NoReturn]

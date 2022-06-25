@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
 from functools import lru_cache
-from typing import Any
+from typing import Any, NoReturn, Union
 from fastapi import HTTPException
 from starlette.responses import Response
 from starlette.status import HTTP_422_UNPROCESSABLE_ENTITY
@@ -10,7 +10,7 @@ from starlette.status import HTTP_422_UNPROCESSABLE_ENTITY
 from src.data.models import Movie, User
 from src.data.schema import MovieCategories
 from src.middleware.jwt_middleware import signed_jwt_token
-from src.utils import IntStrType
+from src.utils import IntStrType, OptionalRaise
 
 
 def get_all_movies() -> dict:
@@ -46,12 +46,12 @@ def cost_by_rented_id(movie_id: IntStrType, user_id: IntStrType) -> dict:
     return {'cost_in_cents': cost}
 
 
-def login(user_id: str, passphrase_hash: str):
+def login(user_id: str, passphrase_hash: str) -> dict:
     raise_if_user_pass_no_match(user_id=user_id, passphrase_hash=passphrase_hash)
     return {"token": signed_jwt_token()}
 
 
-def raise_if_user_pass_no_match(user_id: str, passphrase_hash: str):
+def raise_if_user_pass_no_match(user_id: str, passphrase_hash: str) -> OptionalRaise:
     user = user_by_id(user_id)
     if not user.passphrase_hash == passphrase_hash:
         raise http_422_no_match_exception(msg='User ID or passphrase_hash are wrong.')
@@ -80,7 +80,7 @@ class RentedMovieHandler:
     def rent_movie(self, movie_id: int, user_id: str) -> Response:
         return self._rent_movie(movie_id=movie_id, user_id=user_id, modifier=RentedMovieModifier())
 
-    def _rent_movie(self, movie_id: int, user_id: str, modifier: RentedMovieModifier):
+    def _rent_movie(self, movie_id: int, user_id: str, modifier: RentedMovieModifier) -> Response:
         user = user_by_id(user_id=user_id)
         raise_http_if_x_doesnt_exist(x=user, msg=f'User ID {user_id}')
 
@@ -90,10 +90,12 @@ class RentedMovieHandler:
         modified = modifier.add_rented(user=user, movie_id=movie_id)
         return self.rent_response(modified=modified, movie_id=movie_id)
 
-    def return_movie(self, movie_id: IntStrType, user_id: IntStrType):
+    def return_movie(self, movie_id: IntStrType, user_id: IntStrType) -> Response:
         return self._return_movie(movie_id=movie_id, user_id=user_id, modifier=RentedMovieModifier())
 
-    def _return_movie(self, movie_id: IntStrType, user_id: IntStrType, modifier: RentedMovieModifier):
+    def _return_movie(self, movie_id: IntStrType,
+                      user_id: IntStrType,
+                      modifier: RentedMovieModifier) -> Response:
         user = user_by_id(user_id=user_id)
         raise_http_if_x_doesnt_exist(x=user, msg=f'User ID {user_id}')
 
@@ -128,7 +130,7 @@ class CostPerDay(int, Enum):
 
 class RentedMovieCost:
     @lru_cache
-    def cost(self, days_used: int):
+    def cost(self, days_used: int) -> int:
         # TODO refactor magic number 3 + break method
         if days_used <= 3:
             return days_used * CostPerDay.up_to_3days
@@ -138,7 +140,7 @@ class RentedMovieCost:
 
         return cost_3days + cost_following_days
 
-    def cost_of_movie(self, user_id: int, movie_id: int) -> int:
+    def cost_of_movie(self, user_id: int, movie_id: int) -> Union[int, NoReturn]:
         u = user_by_id(user_id=user_id)
         for encoded_str in u.rented_movies:
             movie_id_date_pair = RentedMovieDecoder().decoded_pair(encoded_str)
@@ -152,16 +154,16 @@ class RentedMovieCost:
 
 
 class RentDaysHandler:
-    def decoded_rent_date(self, stored_str: str):
+    def decoded_rent_date(self, stored_str: str) -> datetime:
         return datetime.strptime(stored_str, '%Y-%m-%d')
 
-    def current_date(self):
+    def current_date(self) -> datetime:
         return datetime.today()
 
-    def current_date_str(self):
+    def current_date_str(self) -> str:
         return self.current_date().strftime('%Y-%m-%d')
 
-    def _days(self, start_day: str):
+    def _days(self, start_day: str) -> int:
         start_date = self.decoded_rent_date(stored_str=start_day)
         end_date = self.current_date()
         date_diff = end_date - start_date
@@ -182,7 +184,7 @@ class MovieIDDatePair:
 class RentedMovieDecoder:
     STR_SEPARATOR = ':'
 
-    def decoded_pair(self, movie_id_date_str: str):
+    def decoded_pair(self, movie_id_date_str: str) -> MovieIDDatePair:
         movie_id, date = movie_id_date_str.split(self.STR_SEPARATOR)
         return MovieIDDatePair(movie_id=movie_id, start_date=date)
 
@@ -192,11 +194,11 @@ class TransactionHandler:
         user.update(__raw__={"$inc": {"balance": -movie_cost}})
 
 
-def http_422_no_match_exception(msg="No match found."):
+def http_422_no_match_exception(msg="No match found.") -> NoReturn:
     return HTTPException(status_code=HTTP_422_UNPROCESSABLE_ENTITY,
                          detail=msg)
 
 
-def raise_http_if_x_doesnt_exist(x: Any, msg: str):
+def raise_http_if_x_doesnt_exist(x: Any, msg: str) -> OptionalRaise:
     if not x:
         raise http_422_no_match_exception(msg=f'"{msg} match not found."')

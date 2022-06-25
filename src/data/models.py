@@ -1,4 +1,4 @@
-from typing import List, NoReturn
+from typing import List, NoReturn, Optional
 from mongoengine import Document, StringField, IntField, ListField, ValidationError
 
 from src.data._base import MOVIE_CATEGORIES
@@ -14,7 +14,7 @@ class User(Document):
 
 
 # ---------------------------------------------------------------------------
-def validate_movie_categories(categories: List) -> NoReturn:
+def validate_movie_categories(categories: List) -> Optional[NoReturn]:
     disallowed_categories = set(categories) - set(MOVIE_CATEGORIES)
     if disallowed_categories:
         raise ValidationError(f'The following categories are not allowed: {disallowed_categories}')

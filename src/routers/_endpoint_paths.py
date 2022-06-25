@@ -1,6 +1,8 @@
 from dataclasses import dataclass
 from re import sub
-from typing import Iterable, NoReturn
+from typing import Iterable
+
+from src.utils import OptionalRaise
 
 
 class PathCreationError(Exception):
@@ -19,15 +21,15 @@ class EndpointPath:
     def full(self) -> str:
         return HOME + self.stripped_relative
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         self.raise_if_no_slash_at_start()
         self.raise_if_slash_at_end()
 
-    def raise_if_no_slash_at_start(self) -> NoReturn:
+    def raise_if_no_slash_at_start(self) -> OptionalRaise:
         if not self.fastapi_format.startswith('/'):
             raise PathCreationError("Relative path must start with a slash / .")
 
-    def raise_if_slash_at_end(self) -> NoReturn:
+    def raise_if_slash_at_end(self) -> OptionalRaise:
         """ '...the prefix must not include a final /'
         See https://fastapi.tiangolo.com/tutorial/bigger-applications/#another-module-with-apirouter"""
         if self.fastapi_format.endswith('/'):
