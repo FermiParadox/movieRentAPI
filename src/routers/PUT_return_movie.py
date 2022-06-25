@@ -1,7 +1,7 @@
 from starlette.responses import Response
 
 from src.data.schema import UserID
-from src.routers import _endpoint_paths
+from src.routers import endpoint_paths
 from src.routers._base import router
 import src.data.crud
 

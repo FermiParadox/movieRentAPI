@@ -2,7 +2,7 @@ from starlette.responses import Response, JSONResponse
 
 from src.data.schema import MovieCategories
 from src.routers._base import router
-from src.routers import _endpoint_paths
+from src.routers import endpoint_paths
 import src.data.crud
 
 

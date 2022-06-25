@@ -1,6 +1,5 @@
 from dataclasses import dataclass
 from re import sub
-from typing import Iterable
 
 from src.utils import OptionalRaise
 
@@ -44,6 +43,3 @@ RENT = EndpointPath(fastapi_format='/rent_movie/{movie_id}')
 RETURN = EndpointPath(fastapi_format='/return_movie/{movie_id}')
 RENT_COST_BY_MOVIE_ID = EndpointPath(fastapi_format='/cost/{movie_id}')
 LOGIN = EndpointPath(fastapi_format='/login')
-
-PATHS_PROTECTED_WITH_JWT: Iterable[EndpointPath]
-PATHS_PROTECTED_WITH_JWT = {RENT, RETURN, RENT_COST_BY_MOVIE_ID}

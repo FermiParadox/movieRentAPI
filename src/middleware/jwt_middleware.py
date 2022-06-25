@@ -7,8 +7,7 @@ from starlette.responses import Response
 import jwt  # requires PyJWT, despite not mentioning it
 
 from config import JWT_MIDDLEWARE_ACTIVE, JWT_ALGORITHM, JWT_PRIVATE_KEY, JWT_DURATION_HOURS, JWT_SECRET_MESSAGE
-from src.routers._endpoint_paths import PATHS_PROTECTED_WITH_JWT, EndpointPath
-
+from src.routers.endpoint_paths import EndpointPath, RENT, RETURN, RENT_COST_BY_MOVIE_ID
 
 HEADER_NAME_OF_TOKEN = "token"
 
@@ -69,3 +68,5 @@ def signed_jwt_token(duration_h: float = JWT_DURATION_HOURS) -> str:
     # (function output can be tested here: https://jwt.io/ ; displays local time)
     return jwt.encode(payload=payload, key=JWT_PRIVATE_KEY, algorithm=JWT_ALGORITHM)
 
+
+PATHS_PROTECTED_WITH_JWT: Iterable[EndpointPath] = {RENT, RETURN, RENT_COST_BY_MOVIE_ID}

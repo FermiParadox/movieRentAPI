@@ -2,7 +2,7 @@ from starlette.responses import JSONResponse, Response
 
 from src.data.schema import Login
 from src.routers._base import router
-from src.routers import _endpoint_paths
+from src.routers import endpoint_paths
 import src.data.crud
 
 
