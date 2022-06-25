@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from src.data.crud import RentedMovieHandler, RentedMovieDBModifier, RentDaysHandler
+from src.data.crud import RentedMovieHandler, RentDaysHandler
 from src.utils import ResponseCodeBracket
 
 
@@ -29,11 +29,11 @@ class TestRentedMovieDecoder(TestCase):
         from src.data.crud import RentedMovieDateEncoder
 
         date = '2022-06-13'
-        movie_id = 1
-        expect = f'{movie_id}{RentedMovieDateEncoder.STR_SEPARATOR}{date}'
-
+        movie_id = '1'
         result = RentedMovieDateEncoder().encoded_pair(movie_id=1, date=date)
-        self.assertEqual(expect, result)
+
+        self.assertTrue(result.startswith(movie_id))
+        self.assertTrue(result.endswith(date))
 
 
 class TestRentDaysHandler(TestCase):

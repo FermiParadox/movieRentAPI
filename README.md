@@ -15,7 +15,7 @@ Instead of passing movie titles to endpoints when looking for a movie, I’m pas
 
 Searching for a movie by categories A, B returns all movies that are either A or B. 
 
-User is charged for each day he rent’s a movie. Renting the movie for less than a day counts as 1 day (otherwise he’d be charged too little).
+User is charged for each day he rents a movie. Renting the movie for less than a day counts as 1 day (otherwise he’d be charged too little).
 
 Additionally:   
 - I added a /login, which provides a JWT 
@@ -35,7 +35,7 @@ As for the actual movie files, I don’t know if MongoDB would be the best optio
 # SOLID principles 
 I’d normally break all functions/methods into tiny pieces (Single Responsibility Principle), but didn’t do so due to lack of time. 
 
-Likewise I could have used much more often dependency injection and dependency inversion, which would improve the code by reducing strong coupling and make it more testable. 
+Likewise, I could have used much more often dependency injection and dependency inversion, which would improve the code by reducing strong coupling and make it more testable. 
 
 # Testing
 Code coverage is about <strike>96%</strike>[correction:] 82%. Of course there’s much more that could be tested. Despite the seemingly large coverage, the number of implemented tests are a fraction of what was really needed.
