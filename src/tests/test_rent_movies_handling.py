@@ -16,26 +16,24 @@ class TestRentedMovieHandler(TestCase):
         self.assertFalse(ResponseCodeBracket().code_2xx(code=code), msg=f'Response code: {code}')
 
 
-class TestRentedMovieModifier(TestCase):
+class TestRentedMovieDecoder(TestCase):
+    def test_decode_contains_movie_id_and_date(self):
+        from src.data.crud import RentedMovieDateEncoder
+        movie_id = '1'
+        date = '2031-09-14'
+        obj = RentedMovieDateEncoder().decoded_pair(f'{movie_id}{RentedMovieDateEncoder.STR_SEPARATOR}{date}')
+        self.assertEqual(movie_id, obj.movie_id)
+        self.assertEqual(date, obj.start_date)
+
     def test_rent_movie_str(self):
-        from src.data.crud import RentedMovieDecoder
+        from src.data.crud import RentedMovieDateEncoder
 
         date = '2022-06-13'
         movie_id = 1
-        expect = f'{movie_id}{RentedMovieDecoder.STR_SEPARATOR}{date}'
+        expect = f'{movie_id}{RentedMovieDateEncoder.STR_SEPARATOR}{date}'
 
-        result = RentedMovieDBModifier()._rented_movie_str(movie_id=1, date=date)
+        result = RentedMovieDateEncoder().encoded_pair(movie_id=1, date=date)
         self.assertEqual(expect, result)
-
-
-class TestRentedMovieDecoder(TestCase):
-    def test_decode_contains_movie_id_and_date(self):
-        from src.data.crud import RentedMovieDecoder
-        movie_id = '1'
-        date = '2031-09-14'
-        obj = RentedMovieDecoder().decoded_pair(f'{movie_id}{RentedMovieDecoder.STR_SEPARATOR}{date}')
-        self.assertEqual(movie_id, obj.movie_id)
-        self.assertEqual(date, obj.start_date)
 
 
 class TestRentDaysHandler(TestCase):

@@ -72,17 +72,14 @@ def get_user_or_raise_http(user_id: IntStrType) -> Union[User, NoReturn]:
 class RentedMovieDBModifier:
     def add_movie(self, user: User, movie_id: IntStrType) -> bool:
         date = RentDaysHandler().current_date_str()
-        rented_str = self._rented_movie_str(movie_id=movie_id, date=date)
+        rented_str = RentedMovieDateEncoder().encoded_pair(movie_id=movie_id, date=date)
         return user.update(add_to_set__rented_movies=rented_str)
 
     def delete_movie(self, user: User, movie_id: IntStrType) -> bool:
         rented_movies = user.rented_movies
-        str_to_remove = f'{movie_id}{RentedMovieDecoder.STR_SEPARATOR}'
+        str_to_remove = f'{movie_id}{RentedMovieDateEncoder.STR_SEPARATOR}'
         new_rented_movies = [i for i in rented_movies if not i.startswith(str_to_remove)]
         return self._replace_movies(user=user, movies=new_rented_movies)
-
-    def _rented_movie_str(self, movie_id: IntStrType, date: str) -> str:
-        return f'{movie_id}{RentedMovieDecoder.STR_SEPARATOR}{date}'
 
     def _replace_movies(self, user: User, movies: list) -> bool:
         return user.update(set__rented_movies=movies)
@@ -115,6 +112,12 @@ class RentedMovieHandler:
         modified = rented_db_mod.delete_movie(user=user, movie_id=movie_id)
         return self._return_response(modified=modified, movie_id=movie_id)
 
+    def _rent_response(self, modified: bool, movie_id: int) -> Response:
+        return self._return_or_rent_response(modified, movie_id, type_='rent')
+
+    def _return_response(self, modified: bool, movie_id: int) -> Response:
+        return self._return_or_rent_response(modified, movie_id, type_='return')
+
     def _return_or_rent_response(self, modified: bool, movie_id: int,
                                  type_: Literal['rent', 'return']) -> Response:
 
@@ -124,12 +127,6 @@ class RentedMovieHandler:
             return Response(status_code=201, content=success_msg)
         else:
             return Response(status_code=400, content=failure_msg)
-
-    def _rent_response(self, modified: bool, movie_id: int) -> Response:
-        return self._return_or_rent_response(modified, movie_id, type_='rent')
-
-    def _return_response(self, modified: bool, movie_id: int) -> Response:
-        return self._return_or_rent_response(modified, movie_id, type_='return')
 
 
 class RentedMovieCost:
@@ -150,7 +147,7 @@ class RentedMovieCost:
     def cost_of_movie(self, user_id: int, movie_id: int) -> Union[int, NoReturn]:
         user = user_in_db(user_id=user_id)
         for encoded_str in user.rented_movies:
-            movie_id_date_pair = RentedMovieDecoder().decoded_pair(encoded_str)
+            movie_id_date_pair = RentedMovieDateEncoder().decoded_pair(encoded_str)
             m_id = int(movie_id_date_pair.movie_id)
             if m_id == movie_id:
                 start_date = movie_id_date_pair.start_date
@@ -188,12 +185,15 @@ class MovieIDDatePair:
     start_date: str
 
 
-class RentedMovieDecoder:
+class RentedMovieDateEncoder:
     STR_SEPARATOR = ':'
 
     def decoded_pair(self, movie_id_date_str: str) -> MovieIDDatePair:
         movie_id, date = movie_id_date_str.split(self.STR_SEPARATOR)
         return MovieIDDatePair(movie_id=movie_id, start_date=date)
+
+    def encoded_pair(self, movie_id: IntStrType, date: str) -> str:
+        return f'{movie_id}{RentedMovieDateEncoder.STR_SEPARATOR}{date}'
 
 
 class TransactionHandler:
