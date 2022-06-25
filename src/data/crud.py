@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
 from functools import lru_cache
-from typing import Any, NoReturn, Union
+from typing import Any, NoReturn, Union, Literal
 from fastapi import HTTPException
 from starlette.responses import Response
 from starlette.status import HTTP_422_UNPROCESSABLE_ENTITY
@@ -30,19 +30,14 @@ def movies_by_category(categories: MovieCategories) -> dict:
 
 
 # ----------------------------------------------------------------------------------------
-def movie_db_obj_by_id(movie_id: int) -> Movie:
+def movie_in_db(movie_id: int) -> Movie:
     return Movie.objects(id_=movie_id).first()
 
 
-def movie_by_id(movie_id: int) -> dict:
-    m = movie_db_obj_by_id(movie_id)
-    raise_http_if_x_doesnt_exist(x=m, msg=f'Movie ID {movie_id}')
-    return {'title': m.title, 'id_': m.id_, 'categories': m.categories, 'details': m.details}
-
-
-# ----------------------------------------------------------------------------------------
-def user_by_id(user_id: IntStrType) -> User:
-    return User.objects(id_=user_id).first()
+def get_movie_or_raise_http(movie_id: int) -> Movie:
+    movie = movie_in_db(movie_id)
+    raise_http_if_x_doesnt_exist(x=movie, msg=f'Movie ID {movie_id}')
+    return movie
 
 
 # ----------------------------------------------------------------------------------------
@@ -58,24 +53,27 @@ def login(user_id: str, passphrase_hash: str) -> dict:
 
 
 def raise_if_user_pass_no_match(user_id: str, passphrase_hash: str) -> OptionalRaise:
-    user = user_by_id(user_id)
+    user = user_in_db(user_id)
     if not user.passphrase_hash == passphrase_hash:
         raise http_422_no_match_exception(msg='User ID or passphrase_hash are wrong.')
 
 
-# ----------------------------------------------------------------------------------------
-# ----------------------------------------------------------------------------------------
-class RentedMovieDBModifier:
-    def rented_movie_str(self, movie_id: IntStrType, date: str) -> str:
-        return f'{movie_id}{RentedMovieDecoder.STR_SEPARATOR}{date}'
+# ========================================================================================
+def user_in_db(user_id: IntStrType) -> User:
+    return User.objects(id_=user_id).first()
 
+
+def get_user_or_raise_http(user_id: IntStrType) -> Union[User, NoReturn]:
+    user = user_in_db(user_id=user_id)
+    raise_http_if_x_doesnt_exist(x=user, msg=f'User ID {user_id}')
+    return user
+
+
+class RentedMovieDBModifier:
     def add_movie(self, user: User, movie_id: IntStrType) -> bool:
         date = RentDaysHandler().current_date_str()
-        rented_str = self.rented_movie_str(movie_id=movie_id, date=date)
+        rented_str = self._rented_movie_str(movie_id=movie_id, date=date)
         return user.update(add_to_set__rented_movies=rented_str)
-
-    def _replace_movies(self, user: User, movies: list) -> bool:
-        return user.update(set__rented_movies=movies)
 
     def delete_movie(self, user: User, movie_id: IntStrType) -> bool:
         rented_movies = user.rented_movies
@@ -83,57 +81,55 @@ class RentedMovieDBModifier:
         new_rented_movies = [i for i in rented_movies if not i.startswith(str_to_remove)]
         return self._replace_movies(user=user, movies=new_rented_movies)
 
+    def _rented_movie_str(self, movie_id: IntStrType, date: str) -> str:
+        return f'{movie_id}{RentedMovieDecoder.STR_SEPARATOR}{date}'
+
+    def _replace_movies(self, user: User, movies: list) -> bool:
+        return user.update(set__rented_movies=movies)
+
 
 class RentedMovieHandler:
     def rent_movie(self, movie_id: int, user_id: str) -> Response:
-        return self._rent_movie(movie_id=movie_id, user_id=user_id, modifier=RentedMovieDBModifier())
+        return self._rent_movie(movie_id=movie_id, user_id=user_id, rented_db_mod=RentedMovieDBModifier())
 
     def return_movie(self, movie_id: IntStrType, user_id: IntStrType) -> Response:
-        return self._return_movie(movie_id=movie_id, user_id=user_id, modifier=RentedMovieDBModifier())
+        return self._return_movie(movie_id=movie_id, user_id=user_id, rented_db_mod=RentedMovieDBModifier())
 
-    def _rent_movie(self, movie_id: int, user_id: str, modifier: RentedMovieDBModifier) -> Response:
-        user = user_by_id(user_id=user_id)
-        raise_http_if_x_doesnt_exist(x=user, msg=f'User ID {user_id}')
+    def _rent_movie(self, movie_id: int, user_id: str,
+                    rented_db_mod: RentedMovieDBModifier) -> Response:
 
-        movie = movie_by_id(movie_id=movie_id)
-        raise_http_if_x_doesnt_exist(x=movie, msg=f'Movie ID {movie_id}')
+        user = get_user_or_raise_http(user_id=user_id)
+        _ = get_movie_or_raise_http(movie_id=movie_id)
 
-        modified = modifier.add_movie(user=user, movie_id=movie_id)
+        modified = rented_db_mod.add_movie(user=user, movie_id=movie_id)
         return self._rent_response(modified=modified, movie_id=movie_id)
 
-    def _return_movie(self, movie_id: IntStrType,
-                      user_id: IntStrType,
-                      modifier: RentedMovieDBModifier) -> Response:
-        user = user_by_id(user_id=user_id)
-        raise_http_if_x_doesnt_exist(x=user, msg=f'User ID {user_id}')
+    def _return_movie(self, movie_id: IntStrType, user_id: IntStrType,
+                      rented_db_mod: RentedMovieDBModifier) -> Response:
 
-        movie = movie_db_obj_by_id(movie_id=movie_id)
-        raise_http_if_x_doesnt_exist(x=movie, msg=f'Movie ID {movie_id}')
+        user = get_user_or_raise_http(user_id=user_id)
+        _ = get_movie_or_raise_http(movie_id=movie_id)
 
         cost = RentedMovieCost().cost_of_movie(movie_id=movie_id, user_id=user_id)
         TransactionHandler().apply_cost(user=user, movie_cost=cost)
-        modified = modifier.delete_movie(user=user, movie_id=movie_id)
+        modified = rented_db_mod.delete_movie(user=user, movie_id=movie_id)
         return self._return_response(modified=modified, movie_id=movie_id)
 
-    @staticmethod
-    def _rent_response(modified: bool, movie_id: int) -> Response:
+    def _return_or_rent_response(self, modified: bool, movie_id: int,
+                                 type_: Literal['rent', 'return']) -> Response:
+
+        success_msg = f"Movie ID {movie_id} {type_}ed."
+        failure_msg = f"{type_.capitalize()}ing movie ID {movie_id} failed."
         if modified:
-            return Response(status_code=201, content=f'Movie ID {movie_id} rented.')
+            return Response(status_code=201, content=success_msg)
         else:
-            return Response(status_code=400, content=f'Renting movie ID {movie_id} failed.')
+            return Response(status_code=400, content=failure_msg)
+
+    def _rent_response(self, modified: bool, movie_id: int) -> Response:
+        return self._return_or_rent_response(modified, movie_id, type_='rent')
 
     def _return_response(self, modified: bool, movie_id: int) -> Response:
-        if modified:
-            return Response(status_code=201, content=f'Movie ID {movie_id} returned.')
-        else:
-            return Response(status_code=400, content=f'Returning movie ID {movie_id} failed.')
-
-
-class CostPerDay(int, Enum):
-    """Cost in cents.
-    """
-    up_to_3days = 1_00
-    above_3days = 50
+        return self._return_or_rent_response(modified, movie_id, type_='return')
 
 
 class RentedMovieCost:
@@ -152,8 +148,8 @@ class RentedMovieCost:
         return cost_3days + cost_following_days
 
     def cost_of_movie(self, user_id: int, movie_id: int) -> Union[int, NoReturn]:
-        u = user_by_id(user_id=user_id)
-        for encoded_str in u.rented_movies:
+        user = user_in_db(user_id=user_id)
+        for encoded_str in user.rented_movies:
             movie_id_date_pair = RentedMovieDecoder().decoded_pair(encoded_str)
             m_id = int(movie_id_date_pair.movie_id)
             if m_id == movie_id:
@@ -203,6 +199,13 @@ class RentedMovieDecoder:
 class TransactionHandler:
     def apply_cost(self, user: User, movie_cost: int) -> None:
         user.update(__raw__={"$inc": {"balance": -movie_cost}})
+
+
+class CostPerDay(int, Enum):
+    """Cost in cents.
+    """
+    up_to_3days = 1_00
+    above_3days = 50
 
 
 # ----------------------------------------------------------------------------------------
