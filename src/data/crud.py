@@ -129,6 +129,9 @@ class CostPerDay(int, Enum):
 
 
 class RentedMovieCost:
+    # CPU + time for memory tradeoff.
+    # Can't tell if worth it unless tested.
+    # "[Complex and not obviously needed] premature optimization is the root of all evil"
     @lru_cache
     def cost(self, days_used: int) -> int:
         # TODO refactor magic number 3 + break method
