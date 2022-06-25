@@ -52,8 +52,8 @@ def login(user_id: str, passphrase_hash: str):
 
 
 def raise_if_user_pass_no_match(user_id: str, passphrase_hash: str):
-    u = user_by_id(user_id)
-    if not u.passphrase_hash == passphrase_hash:
+    user = user_by_id(user_id)
+    if not user.passphrase_hash == passphrase_hash:
         raise http_422_no_match_exception(msg='User ID or passphrase_hash are wrong.')
 
 
@@ -63,8 +63,8 @@ class RentedMovieModifier:
 
     def add_rented(self, user: User, movie_id: IntStrType) -> bool:
         date = RentDaysHandler().current_date_str()
-        s = self.rented_movie_str(movie_id=movie_id, date=date)
-        return user.update(add_to_set__rented_movies=s)
+        rented_str = self.rented_movie_str(movie_id=movie_id, date=date)
+        return user.update(add_to_set__rented_movies=rented_str)
 
     def store_rented_movies(self, user: User, movies: list) -> bool:
         return user.update(set__rented_movies=movies)
@@ -81,28 +81,28 @@ class RentedMovieHandler:
         return self._rent_movie(movie_id=movie_id, user_id=user_id, modifier=RentedMovieModifier())
 
     def _rent_movie(self, movie_id: int, user_id: str, modifier: RentedMovieModifier):
-        u = user_by_id(user_id=user_id)
-        raise_http_if_x_doesnt_exist(x=u, msg=f'User ID {user_id}')
+        user = user_by_id(user_id=user_id)
+        raise_http_if_x_doesnt_exist(x=user, msg=f'User ID {user_id}')
 
-        m = movie_by_id(movie_id=movie_id)
-        raise_http_if_x_doesnt_exist(x=m, msg=f'Movie ID {movie_id}')
+        movie = movie_by_id(movie_id=movie_id)
+        raise_http_if_x_doesnt_exist(x=movie, msg=f'Movie ID {movie_id}')
 
-        modified = modifier.add_rented(user=u, movie_id=movie_id)
+        modified = modifier.add_rented(user=user, movie_id=movie_id)
         return self.rent_response(modified=modified, movie_id=movie_id)
 
     def return_movie(self, movie_id: IntStrType, user_id: IntStrType):
         return self._return_movie(movie_id=movie_id, user_id=user_id, modifier=RentedMovieModifier())
 
     def _return_movie(self, movie_id: IntStrType, user_id: IntStrType, modifier: RentedMovieModifier):
-        u = user_by_id(user_id=user_id)
-        raise_http_if_x_doesnt_exist(x=u, msg=f'User ID {user_id}')
+        user = user_by_id(user_id=user_id)
+        raise_http_if_x_doesnt_exist(x=user, msg=f'User ID {user_id}')
 
-        m = movie_db_obj_by_id(movie_id=movie_id)
-        raise_http_if_x_doesnt_exist(x=m, msg=f'Movie ID {movie_id}')
+        movie = movie_db_obj_by_id(movie_id=movie_id)
+        raise_http_if_x_doesnt_exist(x=movie, msg=f'Movie ID {movie_id}')
 
         cost = RentedMovieCost().cost_of_movie(movie_id=movie_id, user_id=user_id)
-        TransactionHandler().apply_cost(user=u, movie_cost=cost)
-        modified = modifier.delete_rented(user=u, movie_id=movie_id)
+        TransactionHandler().apply_cost(user=user, movie_cost=cost)
+        modified = modifier.delete_rented(user=user, movie_id=movie_id)
         return self.return_response(modified=modified, movie_id=movie_id)
 
     @staticmethod
