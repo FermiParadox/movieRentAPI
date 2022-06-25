@@ -13,6 +13,7 @@ from src.middleware.jwt_middleware import signed_jwt_token
 from src.utils import IntStrType, OptionalRaise
 
 
+# ----------------------------------------------------------------------------------------
 def get_all_movies() -> dict:
     # Looks rather expensive.
     # Perhaps create mongoDB document containing only movie title + ID.
@@ -22,11 +23,13 @@ def get_all_movies() -> dict:
     return {m.id_: m.title for m in movies}
 
 
+# ----------------------------------------------------------------------------------------
 def movies_by_category(categories: MovieCategories) -> dict:
     movies = Movie.objects(categories__in=categories.categories)
     return {m.id_: m.title for m in movies}
 
 
+# ----------------------------------------------------------------------------------------
 def movie_db_obj_by_id(movie_id: int) -> Movie:
     return Movie.objects(id_=movie_id).first()
 
@@ -37,15 +40,18 @@ def movie_by_id(movie_id: int) -> dict:
     return {'title': m.title, 'id_': m.id_, 'categories': m.categories, 'details': m.details}
 
 
+# ----------------------------------------------------------------------------------------
 def user_by_id(user_id: IntStrType) -> User:
     return User.objects(id_=user_id).first()
 
 
+# ----------------------------------------------------------------------------------------
 def cost_by_rented_id(movie_id: IntStrType, user_id: IntStrType) -> dict:
     cost = RentedMovieCost().cost_of_movie(movie_id=movie_id, user_id=user_id)
     return {'cost_in_cents': cost}
 
 
+# ----------------------------------------------------------------------------------------
 def login(user_id: str, passphrase_hash: str) -> dict:
     raise_if_user_pass_no_match(user_id=user_id, passphrase_hash=passphrase_hash)
     return {"token": signed_jwt_token()}
@@ -57,45 +63,47 @@ def raise_if_user_pass_no_match(user_id: str, passphrase_hash: str) -> OptionalR
         raise http_422_no_match_exception(msg='User ID or passphrase_hash are wrong.')
 
 
-class RentedMovieModifier:
+# ----------------------------------------------------------------------------------------
+# ----------------------------------------------------------------------------------------
+class RentedMovieDBModifier:
     def rented_movie_str(self, movie_id: IntStrType, date: str) -> str:
         return f'{movie_id}{RentedMovieDecoder.STR_SEPARATOR}{date}'
 
-    def add_rented(self, user: User, movie_id: IntStrType) -> bool:
+    def add_movie(self, user: User, movie_id: IntStrType) -> bool:
         date = RentDaysHandler().current_date_str()
         rented_str = self.rented_movie_str(movie_id=movie_id, date=date)
         return user.update(add_to_set__rented_movies=rented_str)
 
-    def store_rented_movies(self, user: User, movies: list) -> bool:
+    def _replace_movies(self, user: User, movies: list) -> bool:
         return user.update(set__rented_movies=movies)
 
-    def delete_rented(self, user: User, movie_id: IntStrType) -> bool:
+    def delete_movie(self, user: User, movie_id: IntStrType) -> bool:
         rented_movies = user.rented_movies
         str_to_remove = f'{movie_id}{RentedMovieDecoder.STR_SEPARATOR}'
         new_rented_movies = [i for i in rented_movies if not i.startswith(str_to_remove)]
-        return self.store_rented_movies(user=user, movies=new_rented_movies)
+        return self._replace_movies(user=user, movies=new_rented_movies)
 
 
 class RentedMovieHandler:
     def rent_movie(self, movie_id: int, user_id: str) -> Response:
-        return self._rent_movie(movie_id=movie_id, user_id=user_id, modifier=RentedMovieModifier())
+        return self._rent_movie(movie_id=movie_id, user_id=user_id, modifier=RentedMovieDBModifier())
 
-    def _rent_movie(self, movie_id: int, user_id: str, modifier: RentedMovieModifier) -> Response:
+    def return_movie(self, movie_id: IntStrType, user_id: IntStrType) -> Response:
+        return self._return_movie(movie_id=movie_id, user_id=user_id, modifier=RentedMovieDBModifier())
+
+    def _rent_movie(self, movie_id: int, user_id: str, modifier: RentedMovieDBModifier) -> Response:
         user = user_by_id(user_id=user_id)
         raise_http_if_x_doesnt_exist(x=user, msg=f'User ID {user_id}')
 
         movie = movie_by_id(movie_id=movie_id)
         raise_http_if_x_doesnt_exist(x=movie, msg=f'Movie ID {movie_id}')
 
-        modified = modifier.add_rented(user=user, movie_id=movie_id)
-        return self.rent_response(modified=modified, movie_id=movie_id)
-
-    def return_movie(self, movie_id: IntStrType, user_id: IntStrType) -> Response:
-        return self._return_movie(movie_id=movie_id, user_id=user_id, modifier=RentedMovieModifier())
+        modified = modifier.add_movie(user=user, movie_id=movie_id)
+        return self._rent_response(modified=modified, movie_id=movie_id)
 
     def _return_movie(self, movie_id: IntStrType,
                       user_id: IntStrType,
-                      modifier: RentedMovieModifier) -> Response:
+                      modifier: RentedMovieDBModifier) -> Response:
         user = user_by_id(user_id=user_id)
         raise_http_if_x_doesnt_exist(x=user, msg=f'User ID {user_id}')
 
@@ -104,17 +112,17 @@ class RentedMovieHandler:
 
         cost = RentedMovieCost().cost_of_movie(movie_id=movie_id, user_id=user_id)
         TransactionHandler().apply_cost(user=user, movie_cost=cost)
-        modified = modifier.delete_rented(user=user, movie_id=movie_id)
-        return self.return_response(modified=modified, movie_id=movie_id)
+        modified = modifier.delete_movie(user=user, movie_id=movie_id)
+        return self._return_response(modified=modified, movie_id=movie_id)
 
     @staticmethod
-    def rent_response(modified: bool, movie_id: int) -> Response:
+    def _rent_response(modified: bool, movie_id: int) -> Response:
         if modified:
             return Response(status_code=201, content=f'Movie ID {movie_id} rented.')
         else:
             return Response(status_code=400, content=f'Renting movie ID {movie_id} failed.')
 
-    def return_response(self, modified: bool, movie_id: int) -> Response:
+    def _return_response(self, modified: bool, movie_id: int) -> Response:
         if modified:
             return Response(status_code=201, content=f'Movie ID {movie_id} returned.')
         else:
@@ -197,6 +205,7 @@ class TransactionHandler:
         user.update(__raw__={"$inc": {"balance": -movie_cost}})
 
 
+# ----------------------------------------------------------------------------------------
 def http_422_no_match_exception(msg="No match found.") -> NoReturn:
     return HTTPException(status_code=HTTP_422_UNPROCESSABLE_ENTITY,
                          detail=msg)

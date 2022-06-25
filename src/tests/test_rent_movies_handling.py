@@ -1,17 +1,17 @@
 from unittest import TestCase
 
-from src.data.crud import RentedMovieHandler, RentedMovieModifier, RentDaysHandler
+from src.data.crud import RentedMovieHandler, RentedMovieDBModifier, RentDaysHandler
 from src.utils import ResponseCodeBracket
 
 
 class TestRentedMovieHandler(TestCase):
     def test_rent_response_on_successful_modification_is_ok(self):
-        response = RentedMovieHandler().rent_response(modified=True, movie_id=1)
+        response = RentedMovieHandler()._rent_response(modified=True, movie_id=1)
         code = response.status_code
         self.assertTrue(ResponseCodeBracket().code_2xx(code=code), msg=f'Response code: {code}')
 
     def test_rent_response_on_failed_modification_is_not_ok(self):
-        response = RentedMovieHandler().rent_response(modified=False, movie_id=1)
+        response = RentedMovieHandler()._rent_response(modified=False, movie_id=1)
         code = response.status_code
         self.assertFalse(ResponseCodeBracket().code_2xx(code=code), msg=f'Response code: {code}')
 
@@ -24,7 +24,7 @@ class TestRentedMovieModifier(TestCase):
         movie_id = 1
         expect = f'{movie_id}{RentedMovieDecoder.STR_SEPARATOR}{date}'
 
-        result = RentedMovieModifier().rented_movie_str(movie_id=1, date=date)
+        result = RentedMovieDBModifier().rented_movie_str(movie_id=1, date=date)
         self.assertEqual(expect, result)
 
 
