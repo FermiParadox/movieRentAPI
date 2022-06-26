@@ -1,3 +1,4 @@
+from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
@@ -69,9 +70,20 @@ def get_user_or_raise_http(user_id: IntStrType) -> Union[User, NoReturn]:
     return user
 
 
+class ITransactionHandler(ABC):
+    @abstractmethod
+    def apply_cost(self, user: User, cost: int):
+        pass
+
+
+class TransactionHandler(ITransactionHandler):
+    def apply_cost(self, user: User, cost: int) -> None:
+        user.update(__raw__={"$inc": {"balance": -cost}})
+
+
 class RentedMovieDBModifier:
     def add_movie(self, user: User, movie_id: IntStrType) -> bool:
-        date = RentDaysHandler().current_date_str()
+        date = RentDays().current_date_str()
         rented_str = RentedMovieDateEncoder().encoded_pair(movie_id=movie_id, date=date)
         return user.update(add_to_set__rented_movies=rented_str)
 
@@ -86,12 +98,6 @@ class RentedMovieDBModifier:
 
 
 class RentedMovieHandler:
-    def rent_movie(self, movie_id: int, user_id: str) -> Response:
-        return self._rent_movie(movie_id=movie_id, user_id=user_id, rented_db_mod=RentedMovieDBModifier())
-
-    def return_movie(self, movie_id: IntStrType, user_id: IntStrType) -> Response:
-        return self._return_movie(movie_id=movie_id, user_id=user_id, rented_db_mod=RentedMovieDBModifier())
-
     def _rent_movie(self, movie_id: int, user_id: str,
                     rented_db_mod: RentedMovieDBModifier) -> Response:
 
@@ -102,13 +108,14 @@ class RentedMovieHandler:
         return self._rent_response(modified=modified, movie_id=movie_id)
 
     def _return_movie(self, movie_id: IntStrType, user_id: IntStrType,
-                      rented_db_mod: RentedMovieDBModifier) -> Response:
+                      rented_db_mod: RentedMovieDBModifier,
+                      transaction_handler: TransactionHandler) -> Response:
 
         user = get_user_or_raise_http(user_id=user_id)
         _ = get_movie_or_raise_http(movie_id=movie_id)
 
         cost = RentedMovieCost().cost_of_movie(movie_id=movie_id, user_id=user_id)
-        TransactionHandler().apply_cost(user=user, movie_cost=cost)
+        transaction_handler.apply_cost(user=user, cost=cost)
         modified = rented_db_mod.delete_movie(user=user, movie_id=movie_id)
         return self._return_response(modified=modified, movie_id=movie_id)
 
@@ -127,6 +134,15 @@ class RentedMovieHandler:
             return Response(status_code=201, content=success_msg)
         else:
             return Response(status_code=400, content=failure_msg)
+
+    def rent_movie(self, movie_id: int, user_id: str) -> Response:
+        return self._rent_movie(movie_id=movie_id, user_id=user_id,
+                                rented_db_mod=RentedMovieDBModifier())
+
+    def return_movie(self, movie_id: IntStrType, user_id: IntStrType) -> Response:
+        return self._return_movie(movie_id=movie_id, user_id=user_id,
+                                  rented_db_mod=RentedMovieDBModifier(),
+                                  transaction_handler=TransactionHandler())
 
 
 class RentedMovieCost:
@@ -150,17 +166,14 @@ class RentedMovieCost:
             movie_id_date_pair = RentedMovieDateEncoder().decoded_pair(encoded_str)
             m_id = int(movie_id_date_pair.movie_id)
             if m_id == movie_id:
-                start_date = movie_id_date_pair.start_date
-                days = RentDaysHandler().charged_days(start_day=start_date)
-                movie_cost = RentedMovieCost().cost(days_used=days)
+                start_date_str = movie_id_date_pair.start_date
+                days_used = RentDays().charged_days(start_day=start_date_str)
+                movie_cost = RentedMovieCost().cost(days_used=days_used)
                 return movie_cost
         raise http_422_no_match_exception(msg=f'Movie ID {movie_id} not found in rented.')
 
 
-class RentDaysHandler:
-    def decoded_rent_date(self, stored_str: str) -> datetime:
-        return datetime.strptime(stored_str, '%Y-%m-%d')
-
+class RentDays:
     def current_date(self) -> datetime:
         return datetime.today()
 
@@ -168,7 +181,7 @@ class RentDaysHandler:
         return self.current_date().strftime('%Y-%m-%d')
 
     def _days(self, start_day: str) -> int:
-        start_date = self.decoded_rent_date(stored_str=start_day)
+        start_date = RentedMovieDateEncoder().date(date_str=start_day)
         end_date = self.current_date()
         date_diff = end_date - start_date
         return date_diff.days
@@ -195,6 +208,8 @@ class RentedMovieDateEncoder:
     def encoded_pair(self, movie_id: IntStrType, date: str) -> str:
         return f'{movie_id}{RentedMovieDateEncoder.STR_SEPARATOR}{date}'
 
+    def date(self, date_str: str) -> datetime:
+        return datetime.strptime(date_str, '%Y-%m-%d')
 
 class TransactionHandler:
     def apply_cost(self, user: User, movie_cost: int) -> None:

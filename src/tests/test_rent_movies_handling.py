@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from src.data.crud import RentedMovieHandler, RentDaysHandler
+from src.data.crud import RentedMovieHandler, RentDays
 from src.utils import ResponseCodeBracket
 
 
@@ -38,11 +38,11 @@ class TestRentedMovieDecoder(TestCase):
 
 class TestRentDaysHandler(TestCase):
     def test__days_from_today_until_today_is_0(self):
-        current_date_str = RentDaysHandler().current_date_str()
-        days = RentDaysHandler()._days(start_day=current_date_str)
+        current_date_str = RentDays().current_date_str()
+        days = RentDays()._days(start_day=current_date_str)
         self.assertEqual(0, days)
 
     def test_charged_days_from_today_until_today_is_1(self):
-        current_date_str = RentDaysHandler().current_date_str()
-        days = RentDaysHandler().charged_days(start_day=current_date_str)
+        current_date_str = RentDays().current_date_str()
+        days = RentDays().charged_days(start_day=current_date_str)
         self.assertEqual(1, days)
