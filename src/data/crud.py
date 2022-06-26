@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
 from functools import lru_cache
-from typing import Any, NoReturn, Union, Literal
+from typing import Any, NoReturn, Union, Literal, Dict
 from fastapi import HTTPException
 from starlette.responses import Response
 from starlette.status import HTTP_422_UNPROCESSABLE_ENTITY
@@ -15,7 +15,7 @@ from src.utils import IntStr, OptionalRaise
 
 
 # ----------------------------------------------------------------------------------------
-def get_all_movies() -> dict:
+def get_all_movies() -> Dict[int, str]:
     # Looks rather expensive.
     # Perhaps create mongoDB document containing only movie title + ID.
     # Besides, movies will not be updated too often.
@@ -25,7 +25,7 @@ def get_all_movies() -> dict:
 
 
 # ----------------------------------------------------------------------------------------
-def movies_by_category(categories: MovieCategories) -> dict:
+def movies_by_category(categories: MovieCategories) -> Dict[int, str]:
     movies = Movie.objects(categories__in=categories.categories)
     return {m.id_: m.title for m in movies}
 
@@ -45,7 +45,7 @@ class MovieInDB:
 
 
 # ----------------------------------------------------------------------------------------
-def cost_by_rented_id(movie_id: IntStr, user_id: IntStr) -> dict:
+def cost_by_rented_id(movie_id: IntStr, user_id: IntStr) -> Dict[str, int]:
     user = UserInDB(user_id=user_id).check_exists_and_get()
     cost = RentedMovieCost().cost_of_movie(movie_id=movie_id, user=user)
     return {'cost_in_cents': cost}
@@ -53,7 +53,7 @@ def cost_by_rented_id(movie_id: IntStr, user_id: IntStr) -> dict:
 
 # ----------------------------------------------------------------------------------------
 class Authenticator:
-    def login(self, user_id: str, passphrase_hash: str) -> dict:
+    def login(self, user_id: str, passphrase_hash: str) -> Dict[str, str]:
         self.raise_if_user_pass_no_match(user_id=user_id, passphrase_hash=passphrase_hash)
         return {"token": signed_jwt_token()}
 
@@ -107,10 +107,10 @@ class RentedMovieDBModifier(IRentedMovieDBModifier):
     def delete_movie(self, user: User, movie_id: IntStr) -> bool:
         rented_movies = user.rented_movies
         str_to_remove = f'{movie_id}{RentedMovieDateEncoder.STR_SEPARATOR}'
-        new_rented_movies = [i for i in rented_movies if not i.startswith(str_to_remove)]
-        return self._replace_movies(user=user, movies=new_rented_movies)
+        new_list = [i for i in rented_movies if not i.startswith(str_to_remove)]
+        return self._update_rented(user=user, movies=new_list)
 
-    def _replace_movies(self, user: User, movies: list) -> bool:
+    def _update_rented(self, user: User, movies: list) -> bool:
         return user.update(set__rented_movies=movies)
 
 
