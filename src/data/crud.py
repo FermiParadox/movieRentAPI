@@ -52,15 +52,15 @@ def cost_by_rented_id(movie_id: IntStr, user_id: IntStr) -> dict:
 
 
 # ----------------------------------------------------------------------------------------
-def login(user_id: str, passphrase_hash: str) -> dict:
-    raise_if_user_pass_no_match(user_id=user_id, passphrase_hash=passphrase_hash)
-    return {"token": signed_jwt_token()}
+class Authenticator:
+    def login(self, user_id: str, passphrase_hash: str) -> dict:
+        self.raise_if_user_pass_no_match(user_id=user_id, passphrase_hash=passphrase_hash)
+        return {"token": signed_jwt_token()}
 
-
-def raise_if_user_pass_no_match(user_id: str, passphrase_hash: str) -> OptionalRaise:
-    user = UserInDB(user_id=user_id).user()
-    if not user.passphrase_hash == passphrase_hash:
-        raise http_422_no_match_exception(msg='User ID or passphrase_hash are wrong.')
+    def raise_if_user_pass_no_match(self, user_id: str, passphrase_hash: str) -> OptionalRaise:
+        user = UserInDB(user_id=user_id).check_exists_and_get()
+        if not user.passphrase_hash == passphrase_hash:
+            raise http_422_no_match_exception(msg='User ID or passphrase_hash are wrong.')
 
 
 # ========================================================================================
