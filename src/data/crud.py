@@ -11,7 +11,7 @@ from starlette.status import HTTP_422_UNPROCESSABLE_ENTITY
 from src.data.models import Movie, User
 from src.data.schema import MovieCategories
 from src.middleware.jwt_middleware import signed_jwt_token
-from src.utils import IntStrType, OptionalRaise
+from src.utils import IntStr, OptionalRaise
 
 
 # ----------------------------------------------------------------------------------------
@@ -33,7 +33,7 @@ def movies_by_category(categories: MovieCategories) -> dict:
 # ----------------------------------------------------------------------------------------
 @dataclass
 class MovieInDB:
-    movie_id: IntStrType
+    movie_id: IntStr
 
     def get(self) -> Movie:
         return Movie.objects(id_=self.movie_id).first()
@@ -45,7 +45,7 @@ class MovieInDB:
 
 
 # ----------------------------------------------------------------------------------------
-def cost_by_rented_id(movie_id: IntStrType, user_id: IntStrType) -> dict:
+def cost_by_rented_id(movie_id: IntStr, user_id: IntStr) -> dict:
     user = UserInDB(user_id=user_id).check_exists_and_get()
     cost = RentedMovieCost().cost_of_movie(movie_id=movie_id, user=user)
     return {'cost_in_cents': cost}
@@ -66,7 +66,7 @@ def raise_if_user_pass_no_match(user_id: str, passphrase_hash: str) -> OptionalR
 # ========================================================================================
 @dataclass
 class UserInDB:
-    user_id: IntStrType
+    user_id: IntStr
 
     def user(self) -> User:
         return User.objects(id_=self.user_id).first()
@@ -90,21 +90,21 @@ class TransactionHandler(ITransactionHandler):
 
 class IRentedMovieDBModifier(ABC):
     @abstractmethod
-    def add_movie(self, user: User, movie_id: IntStrType) -> bool:
+    def add_movie(self, user: User, movie_id: IntStr) -> bool:
         """Add a rented movie to the DB"""
 
     @abstractmethod
-    def delete_movie(self, user: User, movie_id: IntStrType) -> bool:
+    def delete_movie(self, user: User, movie_id: IntStr) -> bool:
         """Remove a rented movie from the DB"""
 
 
 class RentedMovieDBModifier(IRentedMovieDBModifier):
-    def add_movie(self, user: User, movie_id: IntStrType) -> bool:
+    def add_movie(self, user: User, movie_id: IntStr) -> bool:
         date = RentDays().current_date_str()
         rented_str = RentedMovieDateEncoder().encoded_pair(movie_id=movie_id, date=date)
         return user.update(add_to_set__rented_movies=rented_str)
 
-    def delete_movie(self, user: User, movie_id: IntStrType) -> bool:
+    def delete_movie(self, user: User, movie_id: IntStr) -> bool:
         rented_movies = user.rented_movies
         str_to_remove = f'{movie_id}{RentedMovieDateEncoder.STR_SEPARATOR}'
         new_rented_movies = [i for i in rented_movies if not i.startswith(str_to_remove)]
@@ -132,24 +132,11 @@ class MovieHandlingResponse:
             return Response(status_code=400, content=failure_msg)
 
 
-class RentedMovieHandler:
+class RentingHandler:
     def _rent_movie(self, movie_id: int, user: User,
                     db_modifier: IRentedMovieDBModifier) -> Response:
-
         modified = db_modifier.add_movie(user=user, movie_id=movie_id)
         return MovieHandlingResponse().rent(modified=modified, movie_id=movie_id)
-
-    def _pay_movie(self, movie_id: IntStrType, user: User,
-                   transaction_handler: ITransactionHandler):
-
-        cost = RentedMovieCost().cost_of_movie(movie_id=movie_id, user=user)
-        transaction_handler.apply_cost(user=user, cost=cost)
-
-    def _return_movie(self, movie_id: IntStrType, user: User,
-                      db_modifier: IRentedMovieDBModifier) -> Response:
-
-        modified = db_modifier.delete_movie(user=user, movie_id=movie_id)
-        return MovieHandlingResponse().return_(modified=modified, movie_id=movie_id)
 
     def rent_movie(self, movie_id: int, user_id: str) -> Response:
         user = UserInDB(user_id).check_exists_and_get()
@@ -157,7 +144,17 @@ class RentedMovieHandler:
         return self._rent_movie(movie_id=movie_id, user=user,
                                 db_modifier=RentedMovieDBModifier())
 
-    def return_movie(self, movie_id: IntStrType, user_id: IntStrType) -> Response:
+
+class ReturningHandler:
+    def _pay_movie(self, movie_id: IntStr, user: User, transaction_handler: ITransactionHandler):
+        cost = RentedMovieCost().cost_of_movie(movie_id=movie_id, user=user)
+        transaction_handler.apply_cost(user=user, cost=cost)
+
+    def _return_movie(self, movie_id: IntStr, user: User, db_modifier: IRentedMovieDBModifier) -> Response:
+        modified = db_modifier.delete_movie(user=user, movie_id=movie_id)
+        return MovieHandlingResponse().return_(modified=modified, movie_id=movie_id)
+
+    def return_movie(self, movie_id: IntStr, user_id: IntStr) -> Response:
         user = UserInDB(user_id).check_exists_and_get()
         MovieInDB(movie_id).check_exists_and_get()
 
@@ -226,7 +223,7 @@ class RentedMovieDateEncoder:
         movie_id, date = movie_id_date_str.split(self.STR_SEPARATOR)
         return MovieIDDatePair(movie_id=movie_id, start_date=date)
 
-    def encoded_pair(self, movie_id: IntStrType, date: str) -> str:
+    def encoded_pair(self, movie_id: IntStr, date: str) -> str:
         return f'{movie_id}{RentedMovieDateEncoder.STR_SEPARATOR}{date}'
 
     def date(self, date_str: str) -> datetime:

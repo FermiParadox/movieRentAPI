@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from src.data.crud import RentedMovieHandler, RentDays, ITransactionHandler, MovieHandlingResponse
+from src.data.crud import RentingHandler, RentDays, ITransactionHandler, MovieHandlingResponse
 from src.tests.test_models import MOCK_USER
 from src.utils import ResponseCode
 
@@ -30,14 +30,14 @@ class MockFailedDBModifier(IRentedMovieDBModifier):
 
 class TestRentedMovieHandler(TestCase):
     def test__rent_movie_responds_4xx_when_modification_fails(self):
-        response = RentedMovieHandler()._rent_movie(movie_id=2, user=MOCK_USER,
-                                                    db_modifier=MockFailedDBModifier())
+        response = RentingHandler()._rent_movie(movie_id=2, user=MOCK_USER,
+                                                db_modifier=MockFailedDBModifier())
         code = response.status_code
         self.assertTrue(ResponseCode().is_4xx(code=code), msg=f'Response code: {code}')
 
     def test__rent_movie_responds_2xx_when_modification_succeeds(self):
-        response = RentedMovieHandler()._rent_movie(movie_id=2, user=MOCK_USER,
-                                                    db_modifier=MockSuccessfulDBModifier())
+        response = RentingHandler()._rent_movie(movie_id=2, user=MOCK_USER,
+                                                db_modifier=MockSuccessfulDBModifier())
         code = response.status_code
         self.assertTrue(ResponseCode().is_2xx(code=code), msg=f'Response code: {code}')
 
