@@ -114,7 +114,7 @@ class RentedMovieDBModifier(IRentedMovieDBModifier):
         return user.update(set__rented_movies=movies)
 
 
-class RentResponses:
+class MovieHandlingResponse:
     def rent(self, modified: bool, movie_id: int) -> Response:
         return self._return_or_rent(modified, movie_id, type_='rent')
 
@@ -137,7 +137,7 @@ class RentedMovieHandler:
                     db_modifier: IRentedMovieDBModifier) -> Response:
 
         modified = db_modifier.add_movie(user=user, movie_id=movie_id)
-        return RentResponses().rent(modified=modified, movie_id=movie_id)
+        return MovieHandlingResponse().rent(modified=modified, movie_id=movie_id)
 
     def _pay_movie(self, movie_id: IntStrType, user: User,
                    transaction_handler: ITransactionHandler):
@@ -149,7 +149,7 @@ class RentedMovieHandler:
                       db_modifier: IRentedMovieDBModifier) -> Response:
 
         modified = db_modifier.delete_movie(user=user, movie_id=movie_id)
-        return RentResponses().return_(modified=modified, movie_id=movie_id)
+        return MovieHandlingResponse().return_(modified=modified, movie_id=movie_id)
 
     def rent_movie(self, movie_id: int, user_id: str) -> Response:
         user = UserInDB(user_id).check_exists_and_get()

@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from src.data.crud import RentedMovieHandler, RentDays, ITransactionHandler, RentResponses
+from src.data.crud import RentedMovieHandler, RentDays, ITransactionHandler, MovieHandlingResponse
 from src.tests.test_models import MOCK_USER
 from src.utils import ResponseCode
 
@@ -41,13 +41,15 @@ class TestRentedMovieHandler(TestCase):
         code = response.status_code
         self.assertTrue(ResponseCode().is_2xx(code=code), msg=f'Response code: {code}')
 
+
+class TestRentResponse(TestCase):
     def test_rent_response_on_successful_modification_is_ok(self):
-        response = RentResponses().rent(modified=True, movie_id=1)
+        response = MovieHandlingResponse().rent(modified=True, movie_id=1)
         code = response.status_code
         self.assertTrue(ResponseCode().is_2xx(code=code), msg=f'Response code: {code}')
 
     def test_rent_response_on_failed_modification_is_not_ok(self):
-        response = RentResponses().rent(modified=False, movie_id=1)
+        response = MovieHandlingResponse().rent(modified=False, movie_id=1)
         code = response.status_code
         self.assertTrue(ResponseCode().is_4xx(code=code), msg=f'Response code: {code}')
 
