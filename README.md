@@ -26,7 +26,8 @@ Additionally:
 
 # DB + ODM
 
-MongoDB was used with the mongoengine ODM. 
+MongoDB is accessed by `mongoengine`. 
+
 I could have created a collection that contains only movie title+ID to make calls cheaper. Additionally, this DB is perhaps more suitable than an SQL DB, since there aren’t updates simultaneously in different collections. Plus it can scale horizontally.
 Also, I’ve never used a relational DB, so I couldn’t risk trying to learn+apply the basics in a couple of days. 
 

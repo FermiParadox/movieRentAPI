@@ -90,25 +90,28 @@ class TransactionHandler(ITransactionHandler):
 
 class IRentedMovieDBModifier(ABC):
     @abstractmethod
-    def add_movie(self, user: User, movie_id: IntStr) -> bool:
+    def add(self, user: User, movie_id: IntStr) -> bool:
         """Add a rented movie to the DB"""
 
     @abstractmethod
-    def delete_movie(self, user: User, movie_id: IntStr) -> bool:
+    def delete(self, user: User, movie_id: IntStr) -> bool:
         """Remove a rented movie from the DB"""
 
 
 class RentedMovieDBModifier(IRentedMovieDBModifier):
-    def add_movie(self, user: User, movie_id: IntStr) -> bool:
+    def add(self, user: User, movie_id: IntStr) -> bool:
         date = RentDays().current_date_str()
         rented_str = RentedMovieDateEncoder().encoded_pair(movie_id=movie_id, date=date)
-        return user.update(add_to_set__rented_movies=rented_str)
+        return self._add_one(user=user, rented_str=rented_str)
 
-    def delete_movie(self, user: User, movie_id: IntStr) -> bool:
+    def delete(self, user: User, movie_id: IntStr) -> bool:
         rented_movies = user.rented_movies
         str_to_remove = f'{movie_id}{RentedMovieDateEncoder.STR_SEPARATOR}'
         new_list = [i for i in rented_movies if not i.startswith(str_to_remove)]
         return self._update_rented(user=user, movies=new_list)
+
+    def _add_one(self, user: User, rented_str: str) -> bool:
+        return user.update(add_to_set__rented_movies=rented_str)
 
     def _update_rented(self, user: User, movies: list) -> bool:
         return user.update(set__rented_movies=movies)
@@ -135,7 +138,8 @@ class MovieHandlingResponse:
 class RentingHandler:
     def _rent_movie(self, movie_id: int, user: User,
                     db_modifier: IRentedMovieDBModifier) -> Response:
-        modified = db_modifier.add_movie(user=user, movie_id=movie_id)
+
+        modified = db_modifier.add(user=user, movie_id=movie_id)
         return MovieHandlingResponse().rent(modified=modified, movie_id=movie_id)
 
     def rent_movie(self, movie_id: int, user_id: str) -> Response:
@@ -151,7 +155,7 @@ class ReturningHandler:
         transaction_handler.apply_cost(user=user, cost=cost)
 
     def _return_movie(self, movie_id: IntStr, user: User, db_modifier: IRentedMovieDBModifier) -> Response:
-        modified = db_modifier.delete_movie(user=user, movie_id=movie_id)
+        modified = db_modifier.delete(user=user, movie_id=movie_id)
         return MovieHandlingResponse().return_(modified=modified, movie_id=movie_id)
 
     def return_movie(self, movie_id: IntStr, user_id: IntStr) -> Response:
