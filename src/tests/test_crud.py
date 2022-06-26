@@ -2,7 +2,7 @@ from unittest import TestCase
 
 from mongoengine import disconnect
 
-from src.data.crud import RentedMovieCost, CostPerDay
+from src.data.crud import RentedMovieCost, CostPerDay, UserInDB
 from src.data.database import connect_to_production_db
 
 
@@ -24,7 +24,11 @@ class TestRentedMovieCost(TestCase):
     def test_cost_of_movie_is_int_at_least_1(self):
         disconnect()
         connect_to_production_db()
-        cost = RentedMovieCost().cost_of_movie(user_id=1, movie_id=7)
+
+        user = UserInDB(user_id=1).user()
+        cost = RentedMovieCost().cost_of_movie(user=user, movie_id=7)
+
         self.assertIsInstance(cost, int)
         self.assertGreaterEqual(cost, 1)
+
         disconnect()

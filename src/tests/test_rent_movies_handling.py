@@ -1,19 +1,55 @@
 from unittest import TestCase
 
-from src.data.crud import RentedMovieHandler, RentDays
-from src.utils import ResponseCodeBracket
+from src.data.crud import RentedMovieHandler, RentDays, ITransactionHandler, RentResponses
+from src.tests.test_models import MOCK_USER
+from src.utils import ResponseCodes
+
+from src.data.crud import IRentedMovieDBModifier
+
+
+class MockTransactionHandler(ITransactionHandler):
+    def apply_cost(self, *_, **__):
+        pass
+
+
+class MockSuccessfulDBModifier(IRentedMovieDBModifier):
+    def add_movie(self, *_, **__):
+        return True
+
+    def delete_movie(self, *_, **__):
+        return True
+
+
+class MockFailedDBModifier(IRentedMovieDBModifier):
+    def add_movie(self, *_, **__):
+        return False
+
+    def delete_movie(self, *_, **__):
+        return False
 
 
 class TestRentedMovieHandler(TestCase):
-    def test_rent_response_on_successful_modification_is_ok(self):
-        response = RentedMovieHandler()._rent_response(modified=True, movie_id=1)
+    def test__rent_movie_responds_4xx_when_modification_fails(self):
+        response = RentedMovieHandler()._rent_movie(movie_id=2, user=MOCK_USER,
+                                                    db_modifier=MockFailedDBModifier())
         code = response.status_code
-        self.assertTrue(ResponseCodeBracket().code_2xx(code=code), msg=f'Response code: {code}')
+        self.assertTrue(ResponseCodes().code_4xx(code=code), msg=f'Response code: {code}')
+
+    def test__rent_movie_responds_2xx_when_modification_succeeds(self):
+        response = RentedMovieHandler()._rent_movie(movie_id=2, user=MOCK_USER,
+                                                    db_modifier=MockSuccessfulDBModifier())
+        code = response.status_code
+        self.assertTrue(ResponseCodes().code_2xx(code=code), msg=f'Response code: {code}')
+
+    def test_rent_response_on_successful_modification_is_ok(self):
+        response = RentResponses().rent(modified=True, movie_id=1)
+        code = response.status_code
+        self.assertTrue(ResponseCodes().code_2xx(code=code), msg=f'Response code: {code}')
 
     def test_rent_response_on_failed_modification_is_not_ok(self):
-        response = RentedMovieHandler()._rent_response(modified=False, movie_id=1)
+        response = RentResponses().rent(modified=False, movie_id=1)
         code = response.status_code
-        self.assertFalse(ResponseCodeBracket().code_2xx(code=code), msg=f'Response code: {code}')
+        self.assertTrue(ResponseCodes().code_4xx(code=code), msg=f'Response code: {code}')
 
 
 class TestRentedMovieDecoder(TestCase):

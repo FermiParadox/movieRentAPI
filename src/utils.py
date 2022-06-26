@@ -3,7 +3,7 @@ from typing import Union, Literal, Optional, NoReturn
 IntStrType = Union[int, str]
 
 
-class ResponseCodeBracket:
+class ResponseCodes:
     @staticmethod
     def _code_xxx(code: IntStrType, first_digit: Literal[2, 3, 4, 5]) -> bool:
         code = int(code)

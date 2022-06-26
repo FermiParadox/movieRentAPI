@@ -9,7 +9,7 @@ class User(Document):
     name = StringField(max_length=50, required=True)
     # DO NOT use this in production. Follow best practises when handling passwords.
     passphrase_hash = StringField(min_length=1, max_length=70)
-    balance = IntField(min_value=0, max_value=1000, default=0)
+    balance = IntField(min_value=0, max_value=100000, default=0)
     rented_movies = ListField()     # ['<movie_id>:<date>', ]
 
 
