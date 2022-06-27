@@ -156,7 +156,9 @@ class ReturningHandler:
         cost = RentedMovieCost().cost_of_movie(movie_id=movie_id, user=user)
         transaction_handler.apply_cost(user=user, cost=cost)
 
-    def _return_movie(self, movie_id: IntStr, user: User, db_modifier: IRentedMovieDBModifier) -> Response:
+    def _modify_db_and_respond(self, movie_id: IntStr, user: User,
+                               db_modifier: IRentedMovieDBModifier) -> Response:
+
         modified = db_modifier.delete(user=user, movie_id=movie_id)
         return MovieHandlingResponse().return_(modified=modified, movie_id=movie_id)
 
@@ -166,8 +168,8 @@ class ReturningHandler:
 
         self._pay_movie(movie_id=movie_id, user=user, transaction_handler=TransactionHandler())
 
-        return self._return_movie(movie_id=movie_id, user=user,
-                                  db_modifier=RentedMovieDBModifier())
+        return self._modify_db_and_respond(movie_id=movie_id, user=user,
+                                           db_modifier=RentedMovieDBModifier())
 
 
 class RentedMovieCost:
