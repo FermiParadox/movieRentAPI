@@ -183,11 +183,11 @@ class RentedMovieCost:
         cost_following_days = (days_used - 3) * CostPerDay.above_3days
         return cost_3days + cost_following_days
 
-    # CPU + time for memory tradeoff.
+    # CPU + time vs memory tradeoff.
     # Can't tell if worth it unless tested.
     # "[Complex and not obviously needed] premature optimization is the root of all evil"
     @lru_cache
-    def cost(self, days_used: int) -> int:
+    def _cost(self, days_used: int) -> int:
         # TODO refactor magic number 3
         if days_used <= 3:
             return self._cost_up_to_3(days_used)
@@ -200,7 +200,7 @@ class RentedMovieCost:
             if m_id == movie_id:
                 start_date_str = movie_id_date_pair.start_date
                 days_used = RentDays().charged_days(start_day=start_date_str)
-                movie_cost = RentedMovieCost().cost(days_used=days_used)
+                movie_cost = RentedMovieCost()._cost(days_used=days_used)
                 return movie_cost
         raise http_422_no_match_exception(msg=f'Movie ID {movie_id} not found in rented.')
 
