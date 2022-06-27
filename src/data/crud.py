@@ -138,7 +138,6 @@ class MovieHandlingResponse:
 class RentingHandler:
     def _rent_movie(self, movie_id: int, user: User,
                     db_modifier: IRentedMovieDBModifier) -> Response:
-
         modified = db_modifier.add(user=user, movie_id=movie_id)
         return MovieHandlingResponse().rent(modified=modified, movie_id=movie_id)
 
@@ -169,19 +168,23 @@ class ReturningHandler:
 
 
 class RentedMovieCost:
+    def _cost_up_to_3(self, days_used: Literal[1, 2, 3]) -> int:
+        return days_used * CostPerDay.up_to_3days
+
+    def _cost_3days_or_more(self, days_used: int) -> int:
+        cost_3days = 3 * CostPerDay.up_to_3days
+        cost_following_days = (days_used - 3) * CostPerDay.above_3days
+        return cost_3days + cost_following_days
+
     # CPU + time for memory tradeoff.
     # Can't tell if worth it unless tested.
     # "[Complex and not obviously needed] premature optimization is the root of all evil"
     @lru_cache
     def cost(self, days_used: int) -> int:
-        # TODO refactor magic number 3 + break method
+        # TODO refactor magic number 3
         if days_used <= 3:
-            return days_used * CostPerDay.up_to_3days
-
-        cost_3days = 3 * CostPerDay.up_to_3days
-        cost_following_days = (days_used - 3) * CostPerDay.above_3days
-
-        return cost_3days + cost_following_days
+            return self._cost_up_to_3(days_used)
+        return self._cost_3days_or_more(days_used)
 
     def cost_of_movie(self, user: User, movie_id: int) -> Union[int, NoReturn]:
         for encoded_str in user.rented_movies:
