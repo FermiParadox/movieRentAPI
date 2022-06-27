@@ -136,16 +136,19 @@ class MovieHandlingResponse:
 
 
 class RentingHandler:
-    def _rent_movie(self, movie_id: int, user: User,
-                    db_modifier: IRentedMovieDBModifier) -> Response:
+    def _modify_db_and_respond(self, movie_id: int, user: User,
+                               db_modifier: IRentedMovieDBModifier) -> Response:
         modified = db_modifier.add(user=user, movie_id=movie_id)
         return MovieHandlingResponse().rent(modified=modified, movie_id=movie_id)
 
+    def _check_movie_exists(self, movie_id: int):
+        return MovieInDB(movie_id).check_exists_and_get()
+
     def rent_movie(self, movie_id: int, user_id: str) -> Response:
         user = UserInDB(user_id).check_exists_and_get()
-        MovieInDB(movie_id).check_exists_and_get()
-        return self._rent_movie(movie_id=movie_id, user=user,
-                                db_modifier=RentedMovieDBModifier())
+        self._check_movie_exists(movie_id)
+        return self._modify_db_and_respond(movie_id=movie_id, user=user,
+                                           db_modifier=RentedMovieDBModifier())
 
 
 class ReturningHandler:
