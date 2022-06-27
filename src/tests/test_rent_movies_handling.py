@@ -13,18 +13,18 @@ class MockTransactionHandler(ITransactionHandler):
 
 
 class MockSuccessfulDBModifier(IRentedMovieDBModifier):
-    def add(self, *_, **__):
+    def add_movie(self, *_, **__):
         return True
 
-    def delete(self, *_, **__):
+    def remove_movie(self, *_, **__):
         return True
 
 
 class MockFailedDBModifier(IRentedMovieDBModifier):
-    def add(self, *_, **__):
+    def add_movie(self, *_, **__):
         return False
 
-    def delete(self, *_, **__):
+    def remove_movie(self, *_, **__):
         return False
 
 
