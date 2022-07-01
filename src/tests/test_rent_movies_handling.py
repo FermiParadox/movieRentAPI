@@ -1,18 +1,18 @@
 from unittest import TestCase
 
-from src.data.crud import RentingHandler, RentDays, ITransactionHandler, MovieHandlingResponse
+from src.data.crud import RentingHandler, RentDays, _TransactionHandler, MovieHandlingResponse
 from src.tests.test_models import MOCK_USER
 from src.utils import ResponseCode
 
-from src.data.crud import IRentedMovieDBModifier
+from src.data.crud import _RentedMovieDBModifier
 
 
-class MockTransactionHandler(ITransactionHandler):
+class MockTransactionHandler(_TransactionHandler):
     def apply_cost(self, *_, **__):
         pass
 
 
-class MockSuccessfulDBModifier(IRentedMovieDBModifier):
+class MockSuccessfulDBModifier(_RentedMovieDBModifier):
     def add_movie(self, *_, **__):
         return True
 
@@ -20,7 +20,7 @@ class MockSuccessfulDBModifier(IRentedMovieDBModifier):
         return True
 
 
-class MockFailedDBModifier(IRentedMovieDBModifier):
+class MockFailedDBModifier(_RentedMovieDBModifier):
     def add_movie(self, *_, **__):
         return False
 

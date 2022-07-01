@@ -77,18 +77,18 @@ class UserInDB:
         return user
 
 
-class ITransactionHandler(ABC):
+class _TransactionHandler(ABC):
     @abstractmethod
     def apply_cost(self, user: User, cost: int) -> None:
         pass
 
 
-class TransactionHandler(ITransactionHandler):
+class TransactionHandler(_TransactionHandler):
     def apply_cost(self, user: User, cost: int) -> None:
         user.update(__raw__={"$inc": {"balance": -cost}})
 
 
-class IRentedMovieDBModifier(ABC):
+class _RentedMovieDBModifier(ABC):
     @abstractmethod
     def add_movie(self, user: User, movie_id: IntStr) -> bool:
         """Add a rented movie to the DB"""
@@ -98,7 +98,7 @@ class IRentedMovieDBModifier(ABC):
         """Remove a rented movie from the DB"""
 
 
-class RentedMovieDBModifier(IRentedMovieDBModifier):
+class RentedMovieDBModifier(_RentedMovieDBModifier):
     def add_movie(self, user: User, movie_id: IntStr) -> bool:
         date = RentDays().current_date_str()
         rented_str = RentedMovieDateEncoder().encoded_pair(movie_id=movie_id, date=date)
@@ -137,7 +137,7 @@ class MovieHandlingResponse:
 
 class RentingHandler:
     def _modify_db_and_respond(self, movie_id: int, user: User,
-                               db_modifier: IRentedMovieDBModifier) -> Response:
+                               db_modifier: _RentedMovieDBModifier) -> Response:
         modified = db_modifier.add_movie(user=user, movie_id=movie_id)
         return MovieHandlingResponse().rent(modified=modified, movie_id=movie_id)
 
@@ -153,13 +153,13 @@ class RentingHandler:
 
 class ReturningHandler:
     def _pay_movie(self, movie_id: IntStr, user: User,
-                   transaction_handler: ITransactionHandler):
+                   transaction_handler: _TransactionHandler):
 
         cost = RentedMovieCost().cost_of_movie(movie_id=movie_id, user=user)
         transaction_handler.apply_cost(user=user, cost=cost)
 
     def _modify_db_and_respond(self, movie_id: IntStr, user: User,
-                               db_modifier: IRentedMovieDBModifier) -> Response:
+                               db_modifier: _RentedMovieDBModifier) -> Response:
 
         modified = db_modifier.remove_movie(user=user, movie_id=movie_id)
         return MovieHandlingResponse().return_(modified=modified, movie_id=movie_id)
