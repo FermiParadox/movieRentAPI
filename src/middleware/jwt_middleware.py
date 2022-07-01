@@ -15,10 +15,12 @@ HEADER_NAME_OF_TOKEN = "token"
 
 
 async def middleware_jwt(req: Request, call_next) -> Response:
+    """Check headers for jwt presence and validity for protected endpoints,
+    when active."""
     if not JWT_MIDDLEWARE_ACTIVE:
         return await call_next(req)
 
-    if not is_protected_path(req, paths_protected=JWT_PROTECTED_PATHS):
+    if not is_protected_endpoint(req, endpoints_protected=JWT_PROTECTED_PATHS):
         return await call_next(req)
 
     headers = req.headers
@@ -39,8 +41,8 @@ def token_header_not_found(headers: Headers) -> bool:
     return HEADER_NAME_OF_TOKEN not in headers
 
 
-def is_protected_path(req: Request, paths_protected: Iterable[EndpointPath]) -> bool:
-    for p in paths_protected:
+def is_protected_endpoint(req: Request, endpoints_protected: Iterable[EndpointPath]) -> bool:
+    for p in endpoints_protected:
         if endpoint_path_matches(p, req=req):
             return True
     return False
