@@ -219,7 +219,9 @@ class RentDays:
         return date_diff.days
 
     def charged_days(self, start_day: str) -> int:
-        """If they watch a movie and return it within a few hours
+        """Return days charged.
+
+        If they watch a movie and return it within a few hours
         they should still be charged."""
         return self._days(start_day) + 1
 
