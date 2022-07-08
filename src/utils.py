@@ -1,6 +1,7 @@
 from typing import Union, Literal, Optional, NoReturn
 
 IntStr = Union[int, str]
+OptionalRaise = Optional[NoReturn]
 
 
 class ResponseCode:
@@ -24,4 +25,3 @@ class ResponseCode:
         return self._is_xxx(code=code, first_digit=5)
 
 
-OptionalRaise = Optional[NoReturn]
