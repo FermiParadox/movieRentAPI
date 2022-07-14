@@ -10,5 +10,5 @@ from src.data.crud import Authenticator
 async def post_login(login_info: Login) -> Response:
     user_id = login_info.user_id
     passphrase_hash = login_info.passphrase_hash
-    content = Authenticator().login(user_id=user_id, passphrase_hash=passphrase_hash)
+    content = await Authenticator().login(user_id=user_id, passphrase_hash=passphrase_hash)
     return JSONResponse(content=content)

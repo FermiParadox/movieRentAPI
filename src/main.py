@@ -2,12 +2,12 @@ from fastapi import FastAPI
 from starlette.requests import Request
 from starlette.responses import Response
 
-from src.data.database import connect_to_production_db
+from src.data.database import db_connection
 from src.middleware.jwt_middleware import middleware_jwt
 from src.routers import GET_all_movies, PUT_charge, GET_movie_by_id, POST_movies_by_cat, PUT_rent_movie, \
     PUT_return_movie, POST_login
 
-connect_to_production_db()
+db_connection()
 
 app = FastAPI()
 

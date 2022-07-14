@@ -8,4 +8,4 @@ from src.data.crud import ReturningHandler
 
 @router.put(path=endpoint_paths.RETURN.fastapi_format)
 async def post_return_movie(movie_id: int, user_id: UserID) -> Response:
-    return ReturningHandler().return_movie(movie_id=movie_id, user_id=user_id.id_)
+    return await ReturningHandler().return_movie(movie_id=movie_id, user_id=user_id.id_)

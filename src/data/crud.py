@@ -8,26 +8,25 @@ from fastapi import HTTPException
 from starlette.responses import Response
 from starlette.status import HTTP_422_UNPROCESSABLE_ENTITY
 
-from src.data.models import Movie, User
-from src.data.schema import MovieCategories
+from src.data.database import db_movies, db_users
+from src.data.schema import MovieCategories, Movie, User
 from src.middleware.jwt_middleware import signed_jwt_token
 from src.utils import IntStr, OptionalRaise
 
 
 # ----------------------------------------------------------------------------------------
-def get_all_movies() -> Dict[int, str]:
+async def get_all_movies() -> Dict[int, str]:
     # Looks rather expensive.
     # Perhaps create mongoDB document containing only movie title + ID.
     # Besides, movies will not be updated too often.
-    movies = Movie.objects()
-    m: Movie
-    return {m.id_: m.title for m in movies}
+    movies = await db_movies.find().to_list(1000)
+    return {m['id_']: m['title'] for m in movies}
 
 
 # ----------------------------------------------------------------------------------------
-def movies_by_category(categories: MovieCategories) -> Dict[int, str]:
-    movies = Movie.objects(categories__in=categories.categories)
-    return {m.id_: m.title for m in movies}
+async def movies_by_category(categories: MovieCategories) -> Dict[int, str]:
+    movies = await db_movies.find({'categories': {'$all': categories.categories}}).to_list(1000)
+    return {m['id_']: m['title'] for m in movies}
 
 
 # ----------------------------------------------------------------------------------------
@@ -35,31 +34,31 @@ def movies_by_category(categories: MovieCategories) -> Dict[int, str]:
 class MovieInDB:
     movie_id: IntStr
 
-    def get(self) -> Movie:
-        return Movie.objects(id_=self.movie_id).first()
+    async def get(self) -> Movie:
+        return await db_movies.find_one({'id_': self.movie_id})
 
-    def check_exists_and_get(self) -> OptionalRaise:
-        movie = self.get()
+    async def check_exists_and_get(self) -> OptionalRaise:
+        movie = await self.get()
         raise_http_if_x_doesnt_exist(x=movie, msg=f'Movie ID {self.movie_id}')
         return movie
 
 
 # ----------------------------------------------------------------------------------------
-def cost_by_rented_id(movie_id: IntStr, user_id: IntStr) -> Dict[str, int]:
-    user = UserInDB(user_id=user_id).check_exists_and_get()
-    cost = RentedMovieCost().cost_of_movie(movie_id=movie_id, user=user)
+async def cost_by_rented_id(movie_id: IntStr, user_id: IntStr) -> Dict[str, int]:
+    user = await UserInDB(user_id=user_id).check_exists_and_get()
+    cost = await RentedMovieCost().cost_of_movie(movie_id=movie_id, user=user)
     return {'cost_in_cents': cost}
 
 
 # ----------------------------------------------------------------------------------------
 class Authenticator:
-    def login(self, user_id: str, passphrase_hash: str) -> Dict[str, str]:
-        self.raise_if_user_pass_no_match(user_id=user_id, passphrase_hash=passphrase_hash)
+    async def login(self, user_id: str, passphrase_hash: str) -> Dict[str, str]:
+        await self.raise_if_user_pass_no_match(user_id=user_id, passphrase_hash=passphrase_hash)
         return {"token": signed_jwt_token()}
 
-    def raise_if_user_pass_no_match(self, user_id: str, passphrase_hash: str) -> OptionalRaise:
-        user = UserInDB(user_id=user_id).check_exists_and_get()
-        if not user.passphrase_hash == passphrase_hash:
+    async def raise_if_user_pass_no_match(self, user_id: str, passphrase_hash: str) -> OptionalRaise:
+        user = await UserInDB(user_id=user_id).check_exists_and_get()
+        if not user['passphrase_hash'] == passphrase_hash:
             raise http_422_no_match_exception(msg='User ID or passphrase_hash are wrong.')
 
 
@@ -68,33 +67,35 @@ class Authenticator:
 class UserInDB:
     user_id: IntStr
 
-    def user(self) -> User:
-        return User.objects(id_=self.user_id).first()
+    async def user(self) -> User:
+        # TODO User(**await db_users.find_one({'id_': int(self.user_id)}))
+        #   and revert dict calls.
+        return await db_users.find_one({'id_': int(self.user_id)})
 
-    def check_exists_and_get(self) -> Union[User, NoReturn]:
-        user = self.user()
+    async def check_exists_and_get(self) -> Union[User, NoReturn]:
+        user = await self.user()
         raise_http_if_x_doesnt_exist(x=user, msg=f'User ID {self.user_id}')
         return user
 
 
 class _TransactionHandler(ABC):
     @abstractmethod
-    def apply_cost(self, user: User, cost: int) -> None:
+    def apply_cost(self, user: User, cost: int):
         pass
 
 
 class TransactionHandler(_TransactionHandler):
-    def apply_cost(self, user: User, cost: int) -> None:
-        user.update(__raw__={"$inc": {"balance": -cost}})
+    async def apply_cost(self, user: User, cost: int) -> None:
+        await db_users.find_one_and_update({'id_': user['id_']}, {"$inc": {"balance": -cost}})
 
 
 class _RentedMovieDBModifier(ABC):
     @abstractmethod
-    def add_movie(self, user: User, movie_id: IntStr) -> bool:
+    def add_movie(self, user: User, movie_id: IntStr):
         """Add a rented movie to the DB"""
 
     @abstractmethod
-    def remove_movie(self, user: User, movie_id: IntStr) -> bool:
+    def remove_movie(self, user: User, movie_id: IntStr):
         """Remove a rented movie from the DB"""
 
 
@@ -105,16 +106,16 @@ class RentedMovieDBModifier(_RentedMovieDBModifier):
         return self._add_one_movie(user=user, rented_str=rented_str)
 
     def remove_movie(self, user: User, movie_id: IntStr) -> bool:
-        rented_movies = user.rented_movies
+        rented_movies = user['rented_movies']
         str_to_remove = f'{movie_id}{RentedMovieDateEncoder.STR_SEPARATOR}'
         new_list = [i for i in rented_movies if not i.startswith(str_to_remove)]
         return self._update_all_movies(user=user, movies=new_list)
 
     def _add_one_movie(self, user: User, rented_str: str) -> bool:
-        return user.update(add_to_set__rented_movies=rented_str)
+        return db_users.find_one_and_update({'id_': user['id_']}, {'$push': {'rented_movies': rented_str}})
 
     def _update_all_movies(self, user: User, movies: list) -> bool:
-        return user.update(set__rented_movies=movies)
+        return db_users.find_one_and_update({'id_': user['id_']}, {'$set': {'rented_movies': movies}})
 
 
 class MovieHandlingResponse:
@@ -136,46 +137,46 @@ class MovieHandlingResponse:
 
 
 class RentingHandler:
-    def _modify_db_and_respond(self, movie_id: int, user: User,
-                               db_modifier: _RentedMovieDBModifier) -> Response:
-        modified = db_modifier.add_movie(user=user, movie_id=movie_id)
+    async def _modify_db_and_respond(self, movie_id: int, user: User,
+                                     db_modifier: _RentedMovieDBModifier) -> Response:
+        modified = await db_modifier.add_movie(user=user, movie_id=movie_id)
         return MovieHandlingResponse().rent(modified=modified, movie_id=movie_id)
 
-    def _check_movie_exists(self, movie_id: int):
-        return MovieInDB(movie_id).check_exists_and_get()
+    async def _check_movie_exists(self, movie_id: int):
+        return await MovieInDB(movie_id).check_exists_and_get()
 
-    def rent_movie(self, movie_id: int, user_id: str) -> Response:
-        user = UserInDB(user_id).check_exists_and_get()
-        self._check_movie_exists(movie_id)
-        return self._modify_db_and_respond(movie_id=movie_id, user=user,
-                                           db_modifier=RentedMovieDBModifier())
+    async def rent_movie(self, movie_id: int, user_id: str) -> Response:
+        user = await UserInDB(user_id).check_exists_and_get()
+        await self._check_movie_exists(movie_id)
+        return await self._modify_db_and_respond(movie_id=movie_id, user=user,
+                                                 db_modifier=RentedMovieDBModifier())
 
 
 class ReturningHandler:
-    def _pay_movie(self, movie_id: IntStr, user: User,
-                   transaction_handler: _TransactionHandler):
-
-        cost = RentedMovieCost().cost_of_movie(movie_id=movie_id, user=user)
-        transaction_handler.apply_cost(user=user, cost=cost)
+    async def _pay_movie(self, movie_id: IntStr, user: User,
+                         transaction_handler: _TransactionHandler):
+        cost = await RentedMovieCost().cost_of_movie(movie_id=movie_id, user=user)
+        await transaction_handler.apply_cost(user=user, cost=cost)
 
     def _modify_db_and_respond(self, movie_id: IntStr, user: User,
                                db_modifier: _RentedMovieDBModifier) -> Response:
-
         modified = db_modifier.remove_movie(user=user, movie_id=movie_id)
         return MovieHandlingResponse().return_(modified=modified, movie_id=movie_id)
 
-    def return_movie(self, movie_id: IntStr, user_id: IntStr) -> Response:
-        user = UserInDB(user_id).check_exists_and_get()
-        MovieInDB(movie_id).check_exists_and_get()
+    async def return_movie(self, movie_id: IntStr, user_id: IntStr) -> Response:
+        user = await UserInDB(user_id).check_exists_and_get()
+        await MovieInDB(movie_id).check_exists_and_get()
 
-        self._pay_movie(movie_id=movie_id, user=user, transaction_handler=TransactionHandler())
+        await self._pay_movie(movie_id=movie_id, user=user, transaction_handler=TransactionHandler())
 
         return self._modify_db_and_respond(movie_id=movie_id, user=user,
                                            db_modifier=RentedMovieDBModifier())
 
 
 class RentedMovieCost:
-    def _cost_up_to_3(self, days_used: Literal[1, 2, 3]) -> int:
+    Literal1_2_3 = Literal[1, 2, 3]
+
+    def _cost_up_to_3(self, days_used: Literal1_2_3) -> int:
         return days_used * CostPerDay.up_to_3days
 
     def _cost_3days_or_more(self, days_used: int) -> int:
@@ -187,14 +188,14 @@ class RentedMovieCost:
     # Can't tell if worth it unless tested.
     # "[Complex and not obviously needed] premature optimization is the root of all evil"
     @lru_cache
-    def _cost(self, days_used: int) -> int:
+    def _cost(self, days_used: Union[int, Literal1_2_3]) -> int:
         # TODO refactor magic number 3
         if days_used <= 3:
             return self._cost_up_to_3(days_used)
         return self._cost_3days_or_more(days_used)
 
-    def cost_of_movie(self, user: User, movie_id: int) -> Union[int, NoReturn]:
-        for encoded_str in user.rented_movies:
+    async def cost_of_movie(self, user: User, movie_id: int) -> Union[int, NoReturn]:
+        for encoded_str in user['rented_movies']:
             movie_id_date_pair = RentedMovieDateEncoder().decoded_pair(encoded_str)
             m_id = int(movie_id_date_pair.movie_id)
             if m_id == movie_id:

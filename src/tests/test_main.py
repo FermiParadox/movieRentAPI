@@ -1,4 +1,4 @@
-from unittest import TestCase
+from unittest import TestCase, IsolatedAsyncioTestCase
 from fastapi.testclient import TestClient
 
 from config import JWT_PRIVATE_KEY, JWT_ALGORITHM, JWT_SECRET_MESSAGE
@@ -83,16 +83,16 @@ class TestMovieByID(TestCase):
 
 
 class TestLogin(TestCase):
-    def jwt_token(self):
+    def _jwt_token(self):
         from src.routers.endpoint_paths import LOGIN
         response = client.post(LOGIN.full, json={"user_id": '1',
                                                  "passphrase_hash": "123",
                                                  "id_": 1})
         return response.json()["token"]
 
-    def decoded_jwt_user_id(self):
+    def _decoded_jwt_user_id(self):
         import jwt
-        decoded = jwt.decode(self.jwt_token(), key=JWT_PRIVATE_KEY, algorithms=JWT_ALGORITHM)
+        decoded = jwt.decode(self._jwt_token(), key=JWT_PRIVATE_KEY, algorithms=JWT_ALGORITHM)
         return decoded['user_id']
 
     def setUp(self) -> None:
@@ -107,11 +107,12 @@ class TestLogin(TestCase):
         code = response.status_code
         self.assertTrue(response.ok, msg=f'Response code: {code}')
 
+    # TODO move to suitable class
     def test_login_provides_jwt(self):
-        self.assertEqual(self.decoded_jwt_user_id(), JWT_SECRET_MESSAGE)
+        self.assertEqual(self._decoded_jwt_user_id(), JWT_SECRET_MESSAGE)
 
 
-class TestRentMovie(TestCase):
+class TestRentMovie(IsolatedAsyncioTestCase):
     def setUp(self) -> None:
         from src.routers.endpoint_paths import RENT, RETURN
 
@@ -122,7 +123,7 @@ class TestRentMovie(TestCase):
 
         self.return_url = RETURN.full
         self.return_url_movie2 = self.return_url + EXISTING_MOVIE_ID
-        self.headers = {"token": TestLogin().jwt_token()}
+        self.headers = {"token": TestLogin()._jwt_token()}
 
     def test_rent_movie_raises_422_when_user_no_exist(self):
         response = client.put(self.rent_url_movie2, json={"id_": 46999345236}, headers=self.headers)
@@ -162,7 +163,7 @@ class TestGetCharge(TestCase):
         self.url = RENT_COST_BY_MOVIE_ID.full
         self.cost_url = self.url + '7'
         self.test_user_id = 1
-        self.headers = {"token": TestLogin().jwt_token()}
+        self.headers = {"token": TestLogin()._jwt_token()}
 
     def test_response_is_ok(self):
         response = client.put(self.cost_url, json={"id_": self.test_user_id}, headers=self.headers)

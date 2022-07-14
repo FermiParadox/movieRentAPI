@@ -8,4 +8,4 @@ from src.data.crud import movies_by_category
 
 @router.post(path=endpoint_paths.MOVIES_BY_CAT.fastapi_format)
 async def post_movies_by_category(categories: MovieCategories) -> Response:
-    return JSONResponse(movies_by_category(categories))
+    return JSONResponse(await movies_by_category(categories))
