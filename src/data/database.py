@@ -1,19 +1,14 @@
-from enum import Enum
-import mongoengine
-from pymongo.mongo_client import MongoClient
+import motor.motor_asyncio
 
 from src.secret_handler import MongoDBLink
 
 
-class DBName(str, Enum):
-    production = 'movies_renting'
-    test = 'test'
+def db_connection():
+    link = MongoDBLink().link
+    client = motor.motor_asyncio.AsyncIOMotorClient(link)
+    return client.movies_renting
 
 
-def connect(db: DBName, link: str) -> MongoClient:
-    # https://docs.mongoengine.org/guide/connecting.html#connect-with-keyword-attributes
-    return mongoengine.connect(host=link, db=db)
-
-
-def connect_to_production_db() -> MongoClient:
-    return connect(db=DBName.production, link=MongoDBLink().link())
+db = db_connection()
+db_movies = db["movie"]
+db_users = db["user"]

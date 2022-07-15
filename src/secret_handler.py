@@ -3,6 +3,7 @@ from typing import NoReturn
 
 
 class MongoDBLink:
+    @property
     def link(self) -> str:
         try:
             from IGNORE_GIT_SECRETS import MONGODB_LINK

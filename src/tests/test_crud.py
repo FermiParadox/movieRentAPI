@@ -1,12 +1,12 @@
-from unittest import TestCase
+from unittest import IsolatedAsyncioTestCase
 
 from mongoengine import disconnect
 
 from src.data.crud import RentedMovieCost, CostPerDay, UserInDB
-from src.data.database import connect_to_production_db
+from src.data.database import db_connection
 
 
-class TestRentedMovieCost(TestCase):
+class TestRentedMovieCost(IsolatedAsyncioTestCase):
     def test_cost_for_0days_is_0(self):
         cost = RentedMovieCost()._cost(0)
         self.assertEqual(0, cost)
@@ -21,12 +21,12 @@ class TestRentedMovieCost(TestCase):
         expected = CostPerDay.up_to_3days * 3 + CostPerDay.above_3days * 10
         self.assertEqual(expected, cost)
 
-    def test_cost_of_movie_is_int_at_least_1(self):
+    async def test_cost_of_movie_is_int_at_least_1(self):
         disconnect()
-        connect_to_production_db()
+        db_connection()
 
-        user = UserInDB(user_id=1).user()
-        cost = RentedMovieCost().cost_of_movie(user=user, movie_id=7)
+        user = await UserInDB(user_id=1).user()
+        cost = await RentedMovieCost().cost_of_movie(user=user, movie_id=7)
 
         self.assertIsInstance(cost, int)
         self.assertGreaterEqual(cost, 1)
