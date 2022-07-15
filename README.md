@@ -24,25 +24,35 @@ Additionally:
   - return 
   - see cost
 
-# DB + ODM
+# DB 
 
-MongoDB is accessed by `mongoengine`. 
+MongoDB is accessed by [Motor (async driver)](https://www.mongodb.com/docs/drivers/motor/). 
 
-I could have created a collection that contains only movie title+ID to make calls cheaper. Additionally, this DB is perhaps more suitable than an SQL DB, since there aren’t updates simultaneously in different collections. Plus it can scale horizontally.
-Also, I’ve never used a relational DB, so I couldn’t risk trying to learn+apply the basics in a couple of days. 
+I could have created a collection that contains only movie title+ID to make calls cheaper. 
+I'm assuming this DB is perhaps more suitable than an SQL DB, 
+since there aren’t updates simultaneously in different collections. 
+Plus it can scale horizontally.
+Also, I’ve never used a relational DB, 
+so I couldn’t risk trying to learn+apply the basics in a couple of days. 
 
-As for the actual movie files, I don’t know if MongoDB would be the best option. (I didn’t implement a movie download, since it wasn’t present in the Use Cases.)
+As for the actual movie files, I don’t know if MongoDB would be the best option. 
+(I didn’t implement a movie download, since it wasn’t present in the Use Cases.)
 
 # SOLID principles 
-I’d normally break all functions/methods into tiny pieces (Single Responsibility Principle), but didn’t do so due to lack of time. 
+I’d normally break all functions/methods into tiny pieces (Single Responsibility Principle), 
+but didn’t do so due to lack of time. 
 
-Likewise, I could have used much more often dependency injection and dependency inversion, which would improve the code by reducing strong coupling and make it more testable. 
+Likewise, I could have used much more often dependency injection and dependency inversion, 
+which would improve the code by reducing strong coupling and make it more testable. 
 
 # Testing
-Code coverage is about <strike>96%</strike>[correction:] 82%. Of course there’s much more that could be tested. Despite the seemingly large coverage, the number of implemented tests are a fraction of what was really needed.
+Code coverage is about <strike>96%</strike>[correction:] 82%. 
+Of course there’s much more that could be tested. Despite the seemingly large coverage, 
+the number of implemented tests are a fraction of what was really needed.
 
 # Bugs
-Individually running `test_main.py` works fine. When running all tests, tests of `test_main.py` fail with: 
+Individually running `test_main.py` works fine. 
+When running all tests, tests of `test_main.py` fail with: 
 
 > "mongoengine.connection.ConnectionFailure: You have not defined a default connection". 
 

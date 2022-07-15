@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, validator
 from pydantic.schema import Literal
 from pydantic.types import conint, constr, conlist
 from typing import List
@@ -24,7 +24,7 @@ class User(BaseModel):
     # DO NOT use this in production. Follow best practises when handling passwords.
     passphrase_hash: constr(max_length=50)
     balance: conint(gt=0, le=100000)
-    rented_movies: conlist(Category, unique_items=True)  # ['<movie_id>:<date>', ]
+    rented_movies: conlist(str, unique_items=True)  # ['<movie_id>:<date>', ]
 
 
 class MovieCategories(BaseModel):

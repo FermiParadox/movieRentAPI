@@ -58,7 +58,7 @@ class Authenticator:
 
     async def raise_if_user_pass_no_match(self, user_id: str, passphrase_hash: str) -> OptionalRaise:
         user = await UserInDB(user_id=user_id).check_exists_and_get()
-        if not user['passphrase_hash'] == passphrase_hash:
+        if not user.passphrase_hash == passphrase_hash:
             raise http_422_no_match_exception(msg='User ID or passphrase_hash are wrong.')
 
 
@@ -68,9 +68,7 @@ class UserInDB:
     user_id: IntStr
 
     async def user(self) -> User:
-        # TODO User(**await db_users.find_one({'id_': int(self.user_id)}))
-        #   and revert dict calls.
-        return await db_users.find_one({'id_': int(self.user_id)})
+        return User(**await db_users.find_one({'id_': int(self.user_id)}))
 
     async def check_exists_and_get(self) -> Union[User, NoReturn]:
         user = await self.user()
@@ -86,7 +84,7 @@ class _TransactionHandler(ABC):
 
 class TransactionHandler(_TransactionHandler):
     async def apply_cost(self, user: User, cost: int) -> None:
-        await db_users.find_one_and_update({'id_': user['id_']}, {"$inc": {"balance": -cost}})
+        await db_users.find_one_and_update({'id_': user.id_}, {"$inc": {"balance": -cost}})
 
 
 class _RentedMovieDBModifier(ABC):
@@ -106,16 +104,16 @@ class RentedMovieDBModifier(_RentedMovieDBModifier):
         return self._add_one_movie(user=user, rented_str=rented_str)
 
     def remove_movie(self, user: User, movie_id: IntStr) -> bool:
-        rented_movies = user['rented_movies']
+        rented_movies = user.rented_movies
         str_to_remove = f'{movie_id}{RentedMovieDateEncoder.STR_SEPARATOR}'
         new_list = [i for i in rented_movies if not i.startswith(str_to_remove)]
         return self._update_all_movies(user=user, movies=new_list)
 
     def _add_one_movie(self, user: User, rented_str: str) -> bool:
-        return db_users.find_one_and_update({'id_': user['id_']}, {'$push': {'rented_movies': rented_str}})
+        return db_users.find_one_and_update({'id_': user.id_}, {'$push': {'rented_movies': rented_str}})
 
     def _update_all_movies(self, user: User, movies: list) -> bool:
-        return db_users.find_one_and_update({'id_': user['id_']}, {'$set': {'rented_movies': movies}})
+        return db_users.find_one_and_update({'id_': user.id_}, {'$set': {'rented_movies': movies}})
 
 
 class MovieHandlingResponse:
@@ -195,7 +193,7 @@ class RentedMovieCost:
         return self._cost_3days_or_more(days_used)
 
     async def cost_of_movie(self, user: User, movie_id: int) -> Union[int, NoReturn]:
-        for encoded_str in user['rented_movies']:
+        for encoded_str in user.rented_movies:
             movie_id_date_pair = RentedMovieDateEncoder().decoded_pair(encoded_str)
             m_id = int(movie_id_date_pair.movie_id)
             if m_id == movie_id:
